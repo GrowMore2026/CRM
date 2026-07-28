@@ -107,6 +107,8 @@ export function parseClientFeedback(feedback) {
  * @returns {string | null}
  */
 export function getClientCreationDate(client) {
+  const directDate = client.createdAt || client.created_at || client.createdOn;
+  if (directDate) return directDate;
   const { createdOn } = parseClientFeedback(getClientFeedbackText(client));
   return createdOn || null;
 }

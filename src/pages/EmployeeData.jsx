@@ -212,7 +212,7 @@ const EmployeeData = ({ readOnly }) => {
       return;
     }
 
-    const headers = ['Client Name', 'Company Name', 'Email', 'Phone', 'Services', 'Total Deal (No GST)', 'GST Amount', 'Total Deal (With GST)', 'Collected Amount', 'Status', 'Creation Date'];
+    const headers = ['Client Name', 'Company Name', 'Email', 'Phone', 'Services', 'Total Deal (No GST)', 'GST Amount', 'Total Deal (With GST)', 'Collected Amount', 'Pending Amount', 'Status', 'Creation Date'];
     
     const rows = employeeClients.map(c => {
       const company = getClientCompanyName(c) || '';
@@ -221,6 +221,7 @@ const EmployeeData = ({ readOnly }) => {
       const totalDealGst = getClientTotalDealGst(c);
       const totalDealWithGst = getClientTotalDealWithGst(c) || (totalDeal + totalDealGst);
       const collected = c.paymentAmount ?? 0;
+      const pendingAmount = Math.max(0, totalDealWithGst - collected);
       const status = c.paymentStatus || 'Pending';
       const createdDate = getClientCreationDate(c);
       
@@ -234,6 +235,7 @@ const EmployeeData = ({ readOnly }) => {
         totalDealGst,
         totalDealWithGst,
         collected,
+        pendingAmount,
         `"${status}"`,
         `"${createdDate ? (typeof createdDate.toISOString === 'function' ? createdDate.toISOString().split('T')[0] : new Date(createdDate).toISOString().split('T')[0]) : ''}"`
       ].join(',');

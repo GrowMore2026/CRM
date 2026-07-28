@@ -22,7 +22,9 @@ import UpcomingHolidays from '../components/UpcomingHolidays';
 import EmployeeData from './EmployeeData';
 
 const AccountantOverview = () => {
-  const { users, clients , setSelectedClient } = useApp();
+  const { users, clients, setSelectedClient, updateClientDetails } = useApp();
+  const [editingClient, setEditingClient] = useState(null);
+  const [editForm, setEditForm] = useState(null);
   const [searchQ, setSearchQ] = useState('');
   const salesUsers = users.filter(u => u.role === 'sales' && (u.name || '').toLowerCase().includes(searchQ.toLowerCase()));
   const navigate = useNavigate();
@@ -53,6 +55,72 @@ const AccountantOverview = () => {
     { name: 'Collected', value: totalCollected, color: '#10b981' },
     { name: 'Outstanding', value: totalOutstanding, color: '#f59e0b' }
   ];
+
+  const startEdit = (c) => {
+    const panNumber = getClientPanNumber(c);
+    const gstNumber = getClientGstNumber(c);
+    const company = getClientCompanyName(c);
+    const payments = getClientPaymentsList(c);
+    const service = getClientServicesList(c);
+    const feedback = parseClientFeedback(getClientFeedbackText(c));
+    const totalDealGst = getClientTotalDealGst(c);
+    const totalDealWithGst = getClientTotalDealWithGst(c);
+
+    setEditForm({
+      id: c.id,
+      panNumber,
+      gstNumber,
+      company,
+      payments,
+      service,
+      note: feedback.note,
+      totalDeal: c.totalDealAmount || 0,
+      totalDealGstAmount: totalDealGst || 0,
+      totalDealWithGst: totalDealWithGst || 0
+    });
+    setEditingClient(c.id);
+  };
+
+  const saveEdit = (clientId) => {
+    const parts = [];
+    const company = editForm.company;
+    if (company) parts.push(`[Company] ${company.trim()}`);
+    const budget = editForm.totalDeal;
+    if (budget) parts.push(`[Budget ₹${budget}]`);
+    const totalDealGst = Number(editForm.totalDealGstAmount) || 0;
+    const totalDealWithGst = Number(editForm.totalDealWithGst) || 0;
+    if (totalDealGst > 0) parts.push(`[Total Deal GST ₹${totalDealGst}]`);
+    if (totalDealWithGst > 0) parts.push(`[Total Deal With GST ₹${totalDealWithGst}]`);
+    if (editForm.panNumber) parts.push(`[PAN] ${editForm.panNumber.trim()}`);
+    if (editForm.gstNumber) parts.push(`[GST] ${editForm.gstNumber.trim()}`);
+    (editForm.payments || []).forEach(p => {
+      if (p.amount && p.date) parts.push(`[Payment ₹${p.amount} on ${p.date}]${p.verified ? ' [Verified]' : ''}`);
+    });
+    const svc = (editForm.service || []).filter(Boolean);
+    if (svc.length) parts.push(`[Services] ${svc.join('; ')}`);
+    if (editForm.note) parts.push(editForm.note);
+
+    const totalDeal = Number(editForm.totalDeal) || 0;
+    const collected = (editForm.payments || []).filter(p => p.verified).reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+
+    updateClientDetails(clientId, {
+      feedback: parts.join('\n\n'),
+      totalDealAmount: totalDeal,
+      paymentAmount: collected,
+      paymentStatus: collected >= totalDeal && totalDeal > 0 ? 'Completed' : 'Pending',
+    });
+    setEditingClient(null);
+  };
+
+  const latestClients = useMemo(() => {
+    return [...clients]
+      .sort((a, b) => {
+        const dateA = new Date(getClientCreationDate(a) || 0);
+        const dateB = new Date(getClientCreationDate(b) || 0);
+        return dateB - dateA;
+      })
+      .slice(0, 10);
+  }, [clients]);
 
   return (
     <div className="animate-fade-in">
@@ -164,82 +232,75 @@ const AccountantOverview = () => {
 
       </div>
 
+      {/* ── Recently Added Clients ── */}
+      <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Recently Added Clients</h3>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing latest 10 clients datewise</span>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                <th style={{ padding: '0.75rem 1rem', width: '50px' }}>Edit</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Date</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Company</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Services</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Deal Value</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Sales Rep</th>
+              </tr>
+            </thead>
+            <tbody>
+              {latestClients.map(c => {
+                const date = getClientCreationDate(c);
+                const services = getClientServicesList(c);
+                const salesRep = users.find(u => u.id === c.createdBy)?.name || 'Unassigned';
+                const dealVal = getClientTotalDealWithGst(c) || Number(c.totalDealAmount) || 0;
+                return (
+                  <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                    <td style={{ padding: '0.75rem 1rem' }}>
+                      <button 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }} 
+                        onClick={() => startEdit(c)}
+                        title="Accountant Access"
+                      >
+                        ✏️
+                      </button>
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '—'}</td>
+                    <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{c.name}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{getClientCompanyName(c) || '—'}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{services.length > 0 ? services.join(', ') : '—'}</td>
+                    <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>₹{dealVal.toLocaleString('en-IN')}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{salesRep}</td>
+                  </tr>
+                );
+              })}
+              {latestClients.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No clients found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
         <UpcomingHolidays />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '2rem' }}>
-        <SearchBar 
-          value={searchQ} 
-          onChange={e => setSearchQ(e.target.value)} 
-          placeholder="Search employees…" 
-          style={{ width: '300px', flex: 'none' }}
+
+
+      {editingClient && (
+        <AccountantEditModal 
+          editForm={editForm} 
+          setEditForm={setEditForm} 
+          onSave={() => saveEdit(editingClient)} 
+          onCancel={() => setEditingClient(null)} 
+          client={clients.find(c => c.id === editingClient)}
+          users={users}
         />
-      </div>
-
-      {/* ── Sales Employee Performance ── */}
-      {salesUsers.length > 0 ? (
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem' }}>Sales Revenue Performance</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-            {salesUsers.map(sales => {
-              const salesClients = clients.filter(c => c.createdBy === sales.id || c.closer === sales.id || (c.managedBy === sales.id && !c.closer));
-              
-              const calcShare = (amount, c) => {
-                const val = Number(amount) || 0;
-                const closerId = c.closer || c.createdBy;
-                if (c.createdBy === closerId) return val;
-                if (c.createdBy === sales.id || closerId === sales.id) return val * 0.5;
-                return 0;
-              };
-
-              const totalRevenue = salesClients.reduce((sum, c) => sum + calcShare(c.paymentAmount, c), 0);
-              const dealValue = salesClients.reduce((sum, c) => sum + calcShare(c.totalDealAmount, c), 0);
-              const progress = dealValue > 0 ? Math.min(100, Math.round((totalRevenue / dealValue) * 100)) : 0;
-
-              return { sales, salesClients, totalRevenue, dealValue, progress };
-            })
-            .sort((a, b) => b.totalRevenue - a.totalRevenue || b.progress - a.progress)
-            .map(({ sales, salesClients, totalRevenue, dealValue, progress }) => {
-              return (
-                <div key={sales.id} onClick={() => navigate(`clients?employee=${sales.id}`)} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', transition: 'transform 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontWeight: 'bold' }}>
-                      {(sales.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{sales.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{salesClients.length} Clients</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Total Revenue Collected</span>
-                    <span style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)' }}>₹{totalRevenue.toLocaleString('en-IN')}</span>
-                  </div>
-
-                  {dealValue > 0 && (
-                    <div style={{ marginTop: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                        <span>Collection Progress</span>
-                        <span>{progress}%</span>
-                      </div>
-                      <div style={{ height: '4px', background: 'var(--bg-tertiary)', borderRadius: '999px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${progress}%`, background: 'var(--text-secondary)', borderRadius: '999px' }} />
-                      </div>
-                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.3rem', textAlign: 'right' }}>
-                        Target: ₹{dealValue.toLocaleString('en-IN')}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)' }}>
-          No sales employees found.
-        </div>
       )}
     </div>
   );
