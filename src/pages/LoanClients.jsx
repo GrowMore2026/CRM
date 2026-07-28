@@ -25,6 +25,8 @@ const LoanClients = ({ filterStatus }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [uiStatusFilter, setUiStatusFilter] = useState('');
   const [selectedFilterEmployee, setSelectedFilterEmployee] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
   
   const loanEmployees = users.filter(u => u.role === 'loan_employee');
 
@@ -92,6 +94,10 @@ const LoanClients = ({ filterStatus }) => {
   useEffect(() => {
     fetchLoanFiles();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, uiStatusFilter, selectedFilterEmployee, activeStatusFilter]);
 
   const fetchLoanFiles = async () => {
     try {
@@ -215,6 +221,11 @@ const LoanClients = ({ filterStatus }) => {
     document.body.removeChild(link);
   };
 
+  const totalPages = Math.ceil(filteredLoans.length / ITEMS_PER_PAGE) || 1;
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredLoans.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
 
@@ -314,7 +325,8 @@ const LoanClients = ({ filterStatus }) => {
           No loan files found matching your search.
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+          <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
@@ -332,7 +344,7 @@ const LoanClients = ({ filterStatus }) => {
               </tr>
             </thead>
             <tbody>
-              {filteredLoans.map(loan => (
+              {currentItems.map(loan => (
                 <tr key={loan.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '1rem' }}>
                     <input type="checkbox" checked={selectedLeads.includes(loan.id)} onChange={() => toggleSelect(loan.id)} style={{ cursor: 'pointer' }} />
@@ -365,6 +377,58 @@ const LoanClients = ({ filterStatus }) => {
               ))}
             </tbody>
           </table>
+          </div>
+          {filteredLoans.length > ITEMS_PER_PAGE && (
+            <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)', borderTop: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+                Showing <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{indexOfFirstItem + 1}</span> to <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{Math.min(indexOfLastItem, filteredLoans.length)}</span> of <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{filteredLoans.length}</span> files
+              </span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                  disabled={currentPage === 1} 
+                  style={{ 
+                    padding: '0.5rem 1.2rem', 
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer', 
+                    background: currentPage === 1 ? 'transparent' : 'var(--bg-secondary)', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '9999px', 
+                    color: 'var(--text-primary)', 
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    fontWeight: '600',
+                    fontSize: '0.85rem',
+                    transition: 'all 0.2s',
+                    boxShadow: currentPage === 1 ? 'none' : '0 2px 4px rgba(0,0,0,0.02)'
+                  }}
+                  onMouseEnter={e => { if (currentPage > 1) { e.currentTarget.style.background = 'var(--bg-primary)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                  onMouseLeave={e => { if (currentPage > 1) { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+                >
+                  ← Previous
+                </button>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                  disabled={currentPage >= totalPages} 
+                  style={{ 
+                    padding: '0.5rem 1.2rem', 
+                    cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', 
+                    background: currentPage >= totalPages ? 'transparent' : 'var(--bg-secondary)', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '9999px', 
+                    color: 'var(--text-primary)', 
+                    opacity: currentPage >= totalPages ? 0.5 : 1,
+                    fontWeight: '600',
+                    fontSize: '0.85rem',
+                    transition: 'all 0.2s',
+                    boxShadow: currentPage >= totalPages ? 'none' : '0 2px 4px rgba(0,0,0,0.02)'
+                  }}
+                  onMouseEnter={e => { if (currentPage < totalPages) { e.currentTarget.style.background = 'var(--bg-primary)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                  onMouseLeave={e => { if (currentPage < totalPages) { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { createPortal } from 'react-dom';
 import { Routes, Route, useNavigate, useSearchParams } from 'react-router-dom';
@@ -369,6 +369,8 @@ const AccountantClients = () => {
   const [searchQ, setSearchQ] = useState('');
   const [editingClient, setEditingClient] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
 
   const empId = searchParams.get('employee');
 
@@ -380,6 +382,10 @@ const AccountantClients = () => {
     displayClients = displayClients.filter(c => c.createdBy === empId || c.closer === empId || (c.managedBy === empId && !c.closer));
   }
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQ, empId]);
+
   if (searchQ.trim()) {
     const q = searchQ.toLowerCase();
     displayClients = displayClients.filter(c => 
@@ -389,23 +395,35 @@ const AccountantClients = () => {
     );
   }
 
+  // Sort by date (newest first / descending)
+  displayClients = [...displayClients].sort((a, b) => {
+    const dateA = new Date(getClientCreationDate(a) || a.created_at || a.timestamp || 0);
+    const dateB = new Date(getClientCreationDate(b) || b.created_at || b.timestamp || 0);
+    return dateB - dateA;
+  });
+
   const startEdit = c => {
     const parsed = parseClientFeedback(c.feedback || '');
     let payments = getClientPaymentsList(c);
     if (payments.length === 0 && c.paymentAmount > 0) {
       payments = [{ amount: c.paymentAmount, date: c.paymentDate ? c.paymentDate.split('T')[0] : new Date().toISOString().split('T')[0] }];
     }
+    const budget = c.totalDealAmount ?? getClientBudgetAmount(c) ?? 0;
+    const gstRate = parsed.totalDealGst && parsed.budget ? Math.round((parsed.totalDealGst / parsed.budget) * 100) : 18;
+    const calcGst = parsed.totalDealGst || Math.round(Number(budget) * (gstRate / 100));
+    const calcTotalWithGst = parsed.totalDealWithGst || (Number(budget) + calcGst);
+
     setEditForm({
       company: getClientCompanyName(c) || '',
       panNumber: getClientPanNumber(c) || '',
       gstNumber: getClientGstNumber(c) || '',
-      totalDeal: c.totalDealAmount ?? getClientBudgetAmount(c) ?? '',
+      totalDeal: budget || '',
       payments: payments,
       note: parsed.note || '',
       service: parsed.services || [],
-      totalDealGstAmount: parsed.totalDealGst || '',
-      totalDealWithGst: parsed.totalDealWithGst || '',
-      gstRate: parsed.totalDealGst && parsed.budget ? Math.round((parsed.totalDealGst / parsed.budget) * 100) : 18,
+      totalDealGstAmount: calcGst || '',
+      totalDealWithGst: calcTotalWithGst || '',
+      gstRate: gstRate,
     });
     setEditingClient(c.id);
   };
@@ -484,6 +502,11 @@ const AccountantClients = () => {
       paymentStatus: newVerifiedCollected >= totalDeal && totalDeal > 0 ? 'Completed' : 'Pending'
     });
   };
+
+  const totalPages = Math.ceil(displayClients.length / ITEMS_PER_PAGE) || 1;
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = displayClients.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="animate-fade-in">
@@ -564,8 +587,9 @@ const AccountantClients = () => {
         </div>
       </div>
 
-      <div className="table-container" style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
-        <table className="table" style={{ width: '100%', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
+      <div className="table-container" style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="table" style={{ width: '100%', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
               <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-muted)', fontSize: '0.85rem' }}><input type="checkbox" /></th>
@@ -585,7 +609,7 @@ const AccountantClients = () => {
             </tr>
           </thead>
           <tbody>
-            {displayClients.map(c => {
+            {currentItems.map(c => {
                const services = getClientServicesList(c);
                const creationDate = getClientCreationDate(c);
                const salesRep = users.find(u => u.id === c.createdBy)?.name || '—';
@@ -635,6 +659,58 @@ const AccountantClients = () => {
         </table>
         {displayClients.length === 0 && (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>No clients found.</div>
+        )}
+        </div>
+        {displayClients.length > ITEMS_PER_PAGE && (
+          <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)', borderTop: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+              Showing <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{indexOfFirstItem + 1}</span> to <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{Math.min(indexOfLastItem, displayClients.length)}</span> of <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{displayClients.length}</span> clients
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                disabled={currentPage === 1} 
+                style={{ 
+                  padding: '0.5rem 1.2rem', 
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer', 
+                  background: currentPage === 1 ? 'transparent' : 'var(--bg-secondary)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '9999px', 
+                  color: 'var(--text-primary)', 
+                  opacity: currentPage === 1 ? 0.5 : 1,
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s',
+                  boxShadow: currentPage === 1 ? 'none' : '0 2px 4px rgba(0,0,0,0.02)'
+                }}
+                onMouseEnter={e => { if (currentPage > 1) { e.currentTarget.style.background = 'var(--bg-primary)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                onMouseLeave={e => { if (currentPage > 1) { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+              >
+                ← Previous
+              </button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                disabled={currentPage >= totalPages} 
+                style={{ 
+                  padding: '0.5rem 1.2rem', 
+                  cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', 
+                  background: currentPage >= totalPages ? 'transparent' : 'var(--bg-secondary)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '9999px', 
+                  color: 'var(--text-primary)', 
+                  opacity: currentPage >= totalPages ? 0.5 : 1,
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s',
+                  boxShadow: currentPage >= totalPages ? 'none' : '0 2px 4px rgba(0,0,0,0.02)'
+                }}
+                onMouseEnter={e => { if (currentPage < totalPages) { e.currentTarget.style.background = 'var(--bg-primary)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                onMouseLeave={e => { if (currentPage < totalPages) { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
