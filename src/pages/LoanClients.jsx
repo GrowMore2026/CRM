@@ -89,6 +89,40 @@ const LoanClients = ({ filterStatus }) => {
     }
   };
 
+  const parseReferralDetails = (notes) => {
+    if (!notes || !notes.includes('Referral Details:')) return null;
+    try {
+      const lines = notes.split('\n');
+      const ref1NameLine = lines.find(l => l.includes('Referral 1 Name:'));
+      const ref1NumLine = lines.find(l => l.includes('Referral 1 Number:'));
+      const ref2NameLine = lines.find(l => l.includes('Referral 2 Name:'));
+      const ref2NumLine = lines.find(l => l.includes('Referral 2 Number:'));
+      return {
+        ref1Name: ref1NameLine ? ref1NameLine.split('Referral 1 Name:')[1].trim() : '',
+        ref1Number: ref1NumLine ? ref1NumLine.split('Referral 1 Number:')[1].trim() : '',
+        ref2Name: ref2NameLine ? ref2NameLine.split('Referral 2 Name:')[1].trim() : '',
+        ref2Number: ref2NumLine ? ref2NumLine.split('Referral 2 Number:')[1].trim() : ''
+      };
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const parseBankerDetails = (notes) => {
+    if (!notes || !notes.includes('Banker Details:')) return null;
+    try {
+      const lines = notes.split('\n');
+      const nameLine = lines.find(l => l.includes('Banker Name:'));
+      const phoneLine = lines.find(l => l.includes('Banker Phone:'));
+      return {
+        name: nameLine ? nameLine.split('Banker Name:')[1].trim() : '',
+        phone: phoneLine ? phoneLine.split('Banker Phone:')[1].trim() : ''
+      };
+    } catch (e) {
+      return null;
+    }
+  };
+
   const inputStyle = { padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: isEmployee ? 'var(--bg-tertiary)' : 'var(--bg-primary)', color: isEmployee ? 'var(--text-muted)' : 'var(--text-primary)', width: '150px', fontSize: '0.85rem' };
 
   useEffect(() => {
@@ -477,26 +511,35 @@ const LoanClients = ({ filterStatus }) => {
                 <h3 style={{ fontSize: '1.1rem', color: 'var(--accent-primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Basic & Property</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Lead Source:</span> <input type="text" value={editForm.source || ''} onChange={e => setEditForm({...editForm, source: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
-                  {editForm.source === 'DSA' && (() => {
-                    const dsa = parseDsaDetails(editForm.notes);
-                    if (!dsa) return null;
-                    return (
-                      <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)', paddingLeft: '1rem' }}>↳ DSA Name:</span> <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>{dsa.name || 'N/A'}</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)', paddingLeft: '1rem' }}>↳ DSA Number:</span> <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>{dsa.number || 'N/A'}</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)', paddingLeft: '1rem' }}>↳ DSA Location:</span> <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>{dsa.location || 'N/A'}</span></div>
-                      </>
-                    );
-                  })()}
+                  {editForm.source === 'DSA' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)', paddingLeft: '1rem' }}>↳ DSA Name:</span> <input type="text" value={editForm.dsaName || (parseDsaDetails(editForm.notes)?.name) || ''} onChange={e => setEditForm({...editForm, dsaName: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)', paddingLeft: '1rem' }}>↳ DSA Number:</span> <input type="text" value={editForm.dsaNumber || (parseDsaDetails(editForm.notes)?.number) || ''} onChange={e => setEditForm({...editForm, dsaNumber: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)', paddingLeft: '1rem' }}>↳ DSA Location:</span> <input type="text" value={editForm.dsaLocation || (parseDsaDetails(editForm.notes)?.location) || ''} onChange={e => setEditForm({...editForm, dsaLocation: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                    </>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Loan Type:</span> <input type="text" value={editForm.typeOfLoan || ''} onChange={e => setEditForm({...editForm, typeOfLoan: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Purpose:</span> <input type="text" value={editForm.loanPurpose || ''} onChange={e => setEditForm({...editForm, loanPurpose: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>PAN Number:</span> <input type="text" value={editForm.panCardNumber || ''} onChange={e => setEditForm({...editForm, panCardNumber: e.target.value.toUpperCase()})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Phone:</span> <input type="text" value={editForm.mobileNumber || ''} onChange={e => setEditForm({...editForm, mobileNumber: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Alt Mobile:</span> <input type="text" value={editForm.alternateMobile || ''} onChange={e => setEditForm({...editForm, alternateMobile: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                  
+                  {/* Referral 1 */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Ref 1 Name:</span> <input type="text" value={editForm.referral1Name || (parseReferralDetails(editForm.notes)?.ref1Name) || ''} onChange={e => setEditForm({...editForm, referral1Name: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Ref 1 Phone:</span> <input type="tel" value={editForm.referral1Number || (parseReferralDetails(editForm.notes)?.ref1Number) || ''} onChange={e => setEditForm({...editForm, referral1Number: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                  
+                  {/* Referral 2 */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Ref 2 Name:</span> <input type="text" value={editForm.referral2Name || (parseReferralDetails(editForm.notes)?.ref2Name) || ''} onChange={e => setEditForm({...editForm, referral2Name: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Ref 2 Phone:</span> <input type="tel" value={editForm.referral2Number || (parseReferralDetails(editForm.notes)?.ref2Number) || ''} onChange={e => setEditForm({...editForm, referral2Number: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>City:</span> <input type="text" value={editForm.city || ''} onChange={e => setEditForm({...editForm, city: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Age:</span> <input type="number" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Property Type:</span> <input type="text" value={editForm.propertyType || ''} onChange={e => setEditForm({...editForm, propertyType: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Prop. Location:</span> <input type="text" value={editForm.propertyLocation || ''} onChange={e => setEditForm({...editForm, propertyLocation: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                  
+                  {/* Banker */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Banker Name:</span> <input type="text" value={editForm.bankerName || (parseBankerDetails(editForm.notes)?.name) || ''} onChange={e => setEditForm({...editForm, bankerName: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'var(--text-muted)' }}>Banker Phone:</span> <input type="tel" value={editForm.bankerPhone || (parseBankerDetails(editForm.notes)?.phone) || ''} onChange={e => setEditForm({...editForm, bankerPhone: e.target.value})} style={inputStyle} disabled={isEmployee} /></div>
                 </div>
               </div>
 

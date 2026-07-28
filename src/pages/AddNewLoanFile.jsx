@@ -13,6 +13,12 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
     dsaName: '',
     dsaNumber: '',
     dsaLocation: '',
+    referral1Name: '',
+    referral1Number: '',
+    referral2Name: '',
+    referral2Number: '',
+    bankerName: '',
+    bankerPhone: '',
     // Type of Loan
     typeOfLoan: 'Business Loan',
     // Basic Details
@@ -59,10 +65,26 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
       notesText = `DSA Partner Details:\n- Name: ${formData.dsaName}\n- Number: ${formData.dsaNumber}\n- Location: ${formData.dsaLocation}`;
     }
 
-    const { dsaName, dsaNumber, dsaLocation, ...baseFormData } = formData;
+    // Add Referral Details
+    if (formData.referral1Name || formData.referral1Number || formData.referral2Name || formData.referral2Number) {
+      if (notesText) notesText += '\n\n';
+      notesText += `Referral Details:\n`;
+      if (formData.referral1Name || formData.referral1Number) {
+        notesText += `- Referral 1 Name: ${formData.referral1Name || '—'}\n  Referral 1 Number: ${formData.referral1Number || '—'}\n`;
+      }
+      if (formData.referral2Name || formData.referral2Number) {
+        notesText += `- Referral 2 Name: ${formData.referral2Name || '—'}\n  Referral 2 Number: ${formData.referral2Number || '—'}\n`;
+      }
+    }
+
+    // Add Banker Details
+    if (formData.bankerName || formData.bankerPhone) {
+      if (notesText) notesText += '\n\n';
+      notesText += `Banker Details:\n- Banker Name: ${formData.bankerName || '—'}\n- Banker Phone: ${formData.bankerPhone || '—'}`;
+    }
 
     const payload = {
-      ...baseFormData,
+      ...formData,
       notes: notesText,
       createdBy: currentUser.id,
       age: formData.age ? parseInt(formData.age, 10) : null,
@@ -90,6 +112,12 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
       dsaName: '',
       dsaNumber: '',
       dsaLocation: '',
+      referral1Name: '',
+      referral1Number: '',
+      referral2Name: '',
+      referral2Number: '',
+      bankerName: '',
+      bankerPhone: '',
       typeOfLoan: 'Business Loan',
       fullName: '', age: '', mobileNumber: '', alternateMobile: '', city: '', occupation: '', employmentType: 'Salaried', panCardNumber: '',
       loanPurpose: '', propertyType: '', propertyLocation: '', propertyValue: '', loanAmount: '', downPayment: '',
@@ -232,7 +260,37 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
                   <input type="text" name="occupation" className="form-control" placeholder="e.g. Engineer" value={formData.occupation} onChange={handleChange} />
                 </div>
               </div>
+ 
+              {/* Referrals (Optional) */}
+              <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-secondary)' }}>Referrals (Optional)</h4>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Referral 1 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="form-group">
+                      <label className="form-label">1. Referral Name</label>
+                      <input type="text" name="referral1Name" className="form-control" placeholder="First Referral Name" value={formData.referral1Name || ''} onChange={handleChange} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Referral Number</label>
+                      <input type="tel" name="referral1Number" className="form-control" placeholder="First Referral Phone" value={formData.referral1Number || ''} onChange={handleChange} />
+                    </div>
+                  </div>
 
+                  {/* Referral 2 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="form-group">
+                      <label className="form-label">2. Referral Name</label>
+                      <input type="text" name="referral2Name" className="form-control" placeholder="Second Referral Name" value={formData.referral2Name || ''} onChange={handleChange} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Referral Number</label>
+                      <input type="tel" name="referral2Number" className="form-control" placeholder="Second Referral Phone" value={formData.referral2Number || ''} onChange={handleChange} />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -422,6 +480,14 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">Best Time to Contact</label>
                 <input type="text" name="bestTimeToContact" className="form-control" placeholder="e.g. Weekdays 4 PM - 6 PM" value={formData.bestTimeToContact} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Banker Name</label>
+                <input type="text" name="bankerName" className="form-control" placeholder="Banker Full Name" value={formData.bankerName || ''} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Banker Phone Number</label>
+                <input type="tel" name="bankerPhone" className="form-control" placeholder="Banker Phone/Contact" value={formData.bankerPhone || ''} onChange={handleChange} />
               </div>
             </div>
           </div>
