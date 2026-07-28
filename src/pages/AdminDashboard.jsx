@@ -62,11 +62,56 @@ const AdminOverview = ({ readOnly }) => {
 
   // Admin sees only their assigned clients; superadmin sees all
   const visibleClients = readOnly ? clients : clients.filter(c => c.managedBy === currentUser?.id);
+
+  const latestAssignedClients = useMemo(() => {
+    return [...visibleClients]
+      .sort((a, b) => {
+        const dateA = new Date(getClientCreationDate(a) || 0);
+        const dateB = new Date(getClientCreationDate(b) || 0);
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+  }, [visibleClients]);
   const paidClients = visibleClients.filter(c => c.paymentStatus === 'Completed');
   const pendingClients = visibleClients.filter(c => c.paymentStatus !== 'Completed');
   const totalRevenue = visibleClients.reduce((s, c) => s + (Number(c.paymentAmount) || 0), 0);
-  const clientsUnderProcess = visibleClients.filter(c => c.stage !== '5. Done Application');
   const clientsCompleted = visibleClients.filter(c => c.stage === '5. Done Application');
+
+  // ── New Admin Data Metrics ──
+  const adminClientChartData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const data = months.map(m => ({ name: m, clients: 0 }));
+
+    visibleClients.forEach(c => {
+      const dateVal = getClientCreationDate(c);
+      if (dateVal) {
+        const d = new Date(dateVal);
+        if (d.getFullYear() === currentYear) {
+          data[d.getMonth()].clients += 1;
+        }
+      } else {
+        // Fallback for older data without creation date
+        data[0].clients += 1;
+      }
+    });
+    return data;
+  }, [visibleClients]);
+
+  const adminStageChartData = useMemo(() => {
+    const counts = {};
+    visibleClients.forEach(c => {
+      let stg = c.stage || '1. Welcome Mail';
+      stg = stg.replace(/^\d+\.\s*/, ''); // strip leading numbers like "1. "
+      counts[stg] = (counts[stg] || 0) + 1;
+    });
+    const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
+    return Object.keys(counts).map((k, i) => ({ 
+      name: k, 
+      value: counts[k],
+      color: PIE_COLORS[i % PIE_COLORS.length]
+    })).sort((a,b) => b.value - a.value);
+  }, [visibleClients]);
 
   const circumference = 2 * Math.PI * 60;
   const clientPaidPct = visibleClients.length > 0 ? Math.round((paidClients.length / visibleClients.length) * 100) : 0;
@@ -100,6 +145,20 @@ const AdminOverview = ({ readOnly }) => {
           <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>{label}</p>
           <p style={{ margin: 0, color: 'var(--accent-primary)', fontWeight: 700 }}>
             ₹{payload[0].value.toLocaleString('en-IN')}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CountTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
+          <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>{label || payload[0].name}</p>
+          <p style={{ margin: 0, color: payload[0].payload?.color || 'var(--accent-primary)', fontWeight: 700 }}>
+            {payload[0].value} Clients
           </p>
         </div>
       );
@@ -330,19 +389,88 @@ const AdminOverview = ({ readOnly }) => {
   return (
     <div className="animate-fade-in" style={{ padding: '1rem' }}>
 
+      {/* ── Status Cards & Widgets (Admin Only) ── */}
       {!readOnly && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-          <UpcomingHolidays />
-        </div>
-      )}
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            
+            <UpcomingHolidays />
 
-      {/* ── Status Cards ── */}
-      {!readOnly && (
-        <div className="grid gap-4 mb-4 grid-cols-3">
-          {stat('Total Clients', visibleClients.length, null, `${basePath}/clients`)}
-          {stat('Paid Clients', paidClients.length, 'var(--success)', `${basePath}/clients/paid`)}
-          {stat('Remaining Payment', pendingClients.length, '#f59e0b', `${basePath}/clients/pending`)}
-        </div>
+            {/* ── Client Summary Donut ── */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0, marginBottom: '0.25rem' }}>Client Summary</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Payment status distribution</p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', flex: 1, justifyContent: 'center' }}>
+                <div style={{ position: 'relative', width: '160px', height: '160px' }}>
+                  <svg viewBox="0 0 160 160" width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
+                    {/* Remaining track */}
+                    <circle cx="80" cy="80" r="60" fill="transparent" stroke="#f59e0b" strokeWidth="14" />
+                    {/* Paid track */}
+                    <circle 
+                      cx="80" 
+                      cy="80" 
+                      r="60" 
+                      fill="transparent" 
+                      stroke="var(--success)" 
+                      strokeWidth="14" 
+                      strokeDasharray={circumference} 
+                      strokeDashoffset={circumference - clientStrokeDash} 
+                      strokeLinecap="round" 
+                      style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} 
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', lineHeight: 1 }}>{visibleClients.length}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>Total</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', padding: '0 1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)' }}></div>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Paid</span>
+                    </div>
+                    <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{paidClients.length}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></div>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Remaining</span>
+                    </div>
+                    <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{pendingClients.length}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+
+            {/* Stage Chart */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0, marginBottom: '0.25rem' }}>Pipeline Stages</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Client distribution across stages</p>
+              </div>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={adminStageChartData} innerRadius={80} outerRadius={110} paddingAngle={5} dataKey="value" stroke="none">
+                      {adminStageChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CountTooltip />} cursor={{ fill: 'transparent' }} />
+                    <Legend wrapperStyle={{ fontSize: '0.8rem', color: 'var(--text-primary)', paddingTop: '10px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
 
@@ -877,135 +1005,65 @@ const AdminOverview = ({ readOnly }) => {
         </>
       )}
 
-      {/* ── 5-Stage Pipeline Board ── */}
-      {!readOnly && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', marginTop: '1.5rem' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0 }}>Client Pipeline</h2>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{pipelineClients.length} in progress</span>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '0.75rem', alignItems: 'start' }}>
-            {STAGES.map(stage => {
-              let stageCount = 0;
-              pipelineClients.forEach(c => {
-                const services = getClientServicesList(c) || [];
-                if (services.length === 0) {
-                  const specificStage = c.stage || '1. Welcome Mail';
-                  if (specificStage === stage.key) stageCount++;
-                } else {
-                  services.forEach(s => {
-                    const specificStage = (c.service_stages && c.service_stages[s]) || c.stage || '1. Welcome Mail';
-                    if (specificStage === stage.key) stageCount++;
-                  });
-                }
-              });
-              return (
-                <div
-                  key={stage.key}
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
-                    borderTop: `4px solid ${stage.color}`,
-                    borderRadius: '0.75rem',
-                    padding: '1.25rem',
-                    boxShadow: 'var(--shadow-sm)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.75rem',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{
-                      width: '36px', height: '36px',
-                      borderRadius: '50%',
-                      background: stage.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem'
-                    }}>
-                      {stage.icon}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.2 }}>
-                      {stage.label}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.25rem' }}>
-                    <span style={{ fontSize: '2.25rem', fontWeight: '800', color: stage.color, letterSpacing: '-1px' }}>{stageCount}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>service{stageCount !== 1 ? 's' : ''}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* ── Client Pipeline Chart ── */}
+      {/* ── Last 5 Assigned Clients ── */}
       {!readOnly && (
-        <div className="card mt-4" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Pipeline Distribution</h3>
-          <div style={{ width: '100%', height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pipelineChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} dy={10} interval={0} />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-                  allowDecimals={false}
-                />
-                <Tooltip
-                  cursor={{ fill: 'var(--bg-tertiary)' }}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
-                          <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>{label}</p>
-                          <p style={{ margin: 0, color: payload[0].payload.color, fontWeight: 700 }}>
-                            {payload[0].value} Services
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {pipelineChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem', marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Last 5 Assigned Clients</h3>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing your latest 5 clients</span>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                  <th style={{ padding: '0.75rem 1rem', width: '50px' }}>Edit</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Date</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Company</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Services</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Deal Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {latestAssignedClients.map(c => {
+                  const date = getClientCreationDate(c);
+                  const services = getClientServicesList(c);
+                  const parsed = parseClientFeedback(getClientFeedbackText(c));
+                  const dealVal = parsed.totalDealWithGst || Number(c.totalDealAmount) || 0;
+                  return (
+                    <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <button 
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }} 
+                          onClick={() => setSelectedClient(c)}
+                          title="Edit Client"
+                        >
+                          ✏️
+                        </button>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '—'}</td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{c.name}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{getClientCompanyName(c) || '—'}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{services.length > 0 ? services.join(', ') : '—'}</td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>₹{dealVal.toLocaleString('en-IN')}</td>
+                    </tr>
+                  );
+                })}
+                {latestAssignedClients.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No clients found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* ── New Clients (Welcome Mail) ── */}
-      {!readOnly && (
-        <div style={{ marginTop: '2.5rem' }}>
-          <AllClientsAdmin
-            preFilteredClients={visibleClients.filter(c => {
-              const services = getClientServicesList(c) || [];
-              if (services.length === 0) {
-                const specificStage = c.stage || '1. Welcome Mail';
-                return specificStage === '1. Welcome Mail';
-              }
-              return services.some(s => {
-                const specificStage = (c.service_stages && c.service_stages[s]) || c.stage || '1. Welcome Mail';
-                return specificStage === '1. Welcome Mail';
-              });
-            })}
-            readOnly={readOnly}
-            titleOverride="New Clients (Welcome Mail)"
-          />
-        </div>
-      )}
+
+
+
     </div>
   );
 };
