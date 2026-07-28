@@ -10,7 +10,7 @@ import EmployeeData from './EmployeeData';
 import AllClientsAdmin from '../components/AllClientsAdmin';
 import AllTasksAdmin from '../components/AllTasksAdmin';
 import { DigitalMarketingLeads, DigitalMarketingLeadListView } from './DigitalMarketingDashboard';
-import { getClientServicesList, getClientCompanyName, getClientFeedbackText, parseClientFeedback, getClientPaymentsList } from '../utils/clientRow';
+import { getClientServicesList, getClientCompanyName, getClientFeedbackText, parseClientFeedback, getClientPaymentsList, getClientCreationDate } from '../utils/clientRow';
 import UpcomingHolidays from '../components/UpcomingHolidays';
 import AddNewClient from './AddNewClient';
 import AddNewLoanFile from './AddNewLoanFile';
@@ -47,6 +47,16 @@ const AdminOverview = ({ readOnly }) => {
   };
 
   const salesUsers = users.filter(u => u.role === 'sales');
+  
+  const latestClients = useMemo(() => {
+    return [...clients]
+      .sort((a, b) => {
+        const dateA = new Date(getClientCreationDate(a) || 0);
+        const dateB = new Date(getClientCreationDate(b) || 0);
+        return dateB - dateA;
+      })
+      .slice(0, 10);
+  }, [clients]);
   const pendingTasks = tasks.filter(t => t.status === 'Pending');
   const doneTasks = tasks.filter(t => t.status === 'Completed');
 
@@ -539,6 +549,64 @@ const AdminOverview = ({ readOnly }) => {
             </div>
 
           </div>
+
+          {/* ── MSME Recently Added Clients ── */}
+          {readOnly && (
+            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>MSME Recently Added Clients</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing latest 10 clients datewise</span>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                      <th style={{ padding: '0.75rem 1rem', width: '50px' }}>Edit</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Date</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Company</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Services</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Deal Value</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Sales Rep</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {latestClients.map(c => {
+                      const date = getClientCreationDate(c);
+                      const services = getClientServicesList(c);
+                      const salesRep = users.find(u => u.id === c.createdBy)?.name || 'Unassigned';
+                      const parsed = parseClientFeedback(getClientFeedbackText(c));
+                      const dealVal = parsed.totalDealWithGst || Number(c.totalDealAmount) || 0;
+                      return (
+                        <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <button 
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }} 
+                              onClick={() => setSelectedClient(c)}
+                              title="Edit Client"
+                            >
+                              ✏️
+                            </button>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '—'}</td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{c.name}</td>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{getClientCompanyName(c) || '—'}</td>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{services.length > 0 ? services.join(', ') : '—'}</td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>₹{dealVal.toLocaleString('en-IN')}</td>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{salesRep}</td>
+                        </tr>
+                      );
+                    })}
+                    {latestClients.length === 0 && (
+                      <tr>
+                        <td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No clients found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* ── Side-by-Side Charts (Monthly Top 5 & Pipeline) ── */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
@@ -1738,13 +1806,7 @@ const NewClientsPage = () => {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-        <h1 className="text-h1" style={{ margin: 0 }}>New Clients</h1>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '9999px', padding: '0.3rem 0.85rem' }}>
-          {newClients.length} unassigned
-        </span>
-      </div>
-      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>Clients added by sales employees that need to be assigned to an admin to begin processing.</p>
+
 
       {/* Search */}
       <div style={{ marginBottom: '1.25rem' }}>
@@ -1764,9 +1826,8 @@ const NewClientsPage = () => {
           <button onClick={() => navigate('/superadmin/clients')} style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.4rem 1rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '9999px', cursor: 'pointer' }}>View All Clients →</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px,1fr))', gap: '1.1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px,1fr))', gap: '1rem' }}>
           {displayClients.map(c => {
-            const ac = PALETTE[(c.name || '?').charCodeAt(0) % PALETTE.length];
             const initials = (c.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
             const total = Number(c.totalDealAmount) || 0;
             const collected = Number(c.paymentAmount) || 0;
@@ -1775,64 +1836,96 @@ const NewClientsPage = () => {
 
             const company = getClientCompanyName(c);
             const services = getClientServicesList(c);
-            const { note, panNumber, gstNumber } = parseClientFeedback(getClientFeedbackText(c));
+            const stage = c.stage || '';
+            const leadName = c.createdBy ? (users.find(u => u.id === c.createdBy)?.name || 'Sales') : '';
+            const closerName = c.closer ? (users.find(u => u.id === c.closer)?.name || '') : '';
 
             return (
-              <div key={c.id} onClick={() => setSelectedClient(c)} style={{ cursor: 'pointer', background: 'var(--bg-secondary)', border: `2px solid ${justAssigned ? 'rgba(16,185,129,0.5)' : 'rgba(99,102,241,0.25)'}`, borderRadius: 'var(--radius-xl)', overflow: 'hidden', transition: 'border-color 0.3s' }}>
+              <div key={c.id} className="card" onClick={() => setSelectedClient(c)} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: `1px solid ${justAssigned ? 'rgba(16,185,129,0.5)' : 'var(--border-color)'}`, borderRadius: 'var(--radius-md)' }}>
                 {/* Just-assigned toast */}
                 {justAssigned && (
-                  <div style={{ background: 'rgba(16,185,129,0.15)', padding: '0.45rem 0.85rem', fontSize: '0.76rem', color: '#34d399', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ background: 'var(--success-light)', padding: '0.45rem 0.85rem', fontSize: '0.76rem', color: 'var(--success)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: 'var(--radius-sm)', margin: '-0.25rem 0 0.25rem 0' }}>
                     ✅ Assigned successfully — moving to pipeline
                   </div>
                 )}
-                {/* Card body */}
-                <div style={{ padding: '1rem 1.1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.6rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg,${ac},${ac}bb)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '0.82rem', color: 'white', flexShrink: 0 }}>{initials}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.92rem', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
 
-                    </div>
-                    <span style={{ fontSize: '0.62rem', fontWeight: '700', color: '#a5b4fc', background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '9999px', padding: '0.1rem 0.5rem', flexShrink: 0 }}>NEW</span>
-                  </div>
-
-
-
-                  {services.length > 0 && (
-                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
-                      {services.map(s => <span key={s} style={{ fontSize: '0.65rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '0.15rem 0.5rem', borderRadius: '9999px', border: '1px solid var(--border-color)' }}>{s}</span>)}
-                    </div>
-                  )}
-
-                  {total > 0 && (
-                    <div style={{ marginBottom: '0.7rem' }}>
-                      <div style={{ height: '4px', background: 'var(--bg-tertiary)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.25rem' }}>
-                        <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#6366f1,#8b5cf6)', borderRadius: '999px' }} />
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                        <span>₹{collected.toLocaleString('en-IN')} collected</span>
-                        <span>₹{total.toLocaleString('en-IN')} total</span>
-                      </div>
-                    </div>
-                  )}
-                  {/* Assign section */}
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <select onClick={e => e.stopPropagation()} value={assignMap[c.id] || ''}
-                      onChange={e => setAssignMap(prev => ({ ...prev, [c.id]: e.target.value }))}
-                      style={{ flex: 1, padding: '0.4rem 0.6rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
-                    >
-                      <option value="">Select Admin…</option>
-                      {adminUsers.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                    </select>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleAssign(c.id); }}
-                      disabled={!assignMap[c.id]}
-                      style={{ padding: '0.4rem 0.9rem', background: assignMap[c.id] ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: assignMap[c.id] ? 'white' : 'var(--text-muted)', border: 'none', borderRadius: 'var(--radius-md)', cursor: assignMap[c.id] ? 'pointer' : 'not-allowed', fontSize: '0.8rem', fontWeight: '700', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
-                    >
-                      Assign →
-                    </button>
+                {/* Avatar + Name + Email */}
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.9rem', flexShrink: 0 }}>{initials}</div>
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-primary)' }}>{c.name}</div>
+                    {c.email && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.email}</div>}
                   </div>
                 </div>
+
+                {/* Company */}
+                {company && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><Building2 size={14} color="var(--accent-primary)" /> {company}</div>}
+
+                {/* Phone */}
+                {c.phone && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={14} color="var(--accent-primary)" /> {c.phone}</div>}
+
+                {/* Stage */}
+                {stage && (
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Stage: </span>
+                    <strong style={{ color: 'var(--text-primary)' }}>{stage}</strong>
+                  </div>
+                )}
+
+                {/* Services */}
+                {services.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>Services:</div>
+                    {services.map(s => {
+                      const sStageKey = (c.service_stages && c.service_stages[s]) || c.stage || '1. Welcome Mail';
+                      return (
+                        <div key={s} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                          <span style={{ color: 'var(--text-primary)' }}>{s}</span>
+                          <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{sStageKey}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No services assigned</div>
+                )}
+
+                {/* Lead & Closer */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  {leadName && <span>Lead: {leadName}</span>}
+                  {closerName && <span>Closer: {closerName}</span>}
+                </div>
+
+                {/* Assign section */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.35rem' }}>
+                  <select onClick={e => e.stopPropagation()} value={assignMap[c.id] || ''}
+                    onChange={e => setAssignMap(prev => ({ ...prev, [c.id]: e.target.value }))}
+                    style={{ flex: 1, padding: '0.4rem 0.6rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
+                  >
+                    <option value="">Select Admin…</option>
+                    {adminUsers.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </select>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleAssign(c.id); }}
+                    disabled={!assignMap[c.id]}
+                    style={{ padding: '0.4rem 0.9rem', background: assignMap[c.id] ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: assignMap[c.id] ? 'white' : 'var(--text-muted)', border: 'none', borderRadius: 'var(--radius-md)', cursor: assignMap[c.id] ? 'pointer' : 'not-allowed', fontSize: '0.8rem', fontWeight: '700', transition: 'var(--transition)', whiteSpace: 'nowrap' }}
+                  >
+                    Assign →
+                  </button>
+                </div>
+
+                {/* Footer: Collected & Total */}
+                {(total > 0 || collected > 0) && (
+                  <div style={{ marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Collected: ₹{collected.toLocaleString('en-IN')}</span>
+                      <strong style={{ color: 'var(--text-primary)' }}>Total: ₹{total.toLocaleString('en-IN')}</strong>
+                    </div>
+                    <div style={{ height: '4px', background: 'var(--bg-secondary)', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: 'var(--accent-primary)', borderRadius: '999px' }} />
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -14,6 +14,18 @@ import {
   getClientPaymentsList
 } from '../utils/clientRow';
 
+
+
+const ALL_SERVICES = ['Private Limited Company', 'Start-up + DSE', 'Seed Funds', 'One Person Company', 'LLP Registration', 'Section 8 / NGO', 'Partnership Firm', 'ISO Certification', 'FSSAI License', 'IEC / Import-Export', 'GeM Registration', 'Udyam Registration', 'Startup India', 'PMEGP Grant', 'CGTMSE Guarantee', 'Mudra Loan', 'Stand-Up India', 'Startup India Seed Fund', 'Working Capital Loans', 'Term Loans', 'Venture Capital', 'Invoice Financing', 'NBFC Tie-ups', 'Website Development', 'SEO & Digital Marketing', 'CRM Solutions', 'Social Media', 'Logo & Branding', 'ROC Compliance', 'GST Filing', 'Income Tax Returns', 'Annual Filings', 'Audit Support', 'Trademark Registration', 'Patent Filing', 'Copyright Protection', 'Shram Suvidha', 'Legal Compliance', 'Other'];
+
+const STAGES = [
+  '1. Welcome Mail',
+  '2. Document Stage / DSC In Process',
+  '3. Pitch Deck',
+  '4. Application',
+  '5. Done Application'
+];
+
 const ClientDetailsModal = ({ client, onClose }) => {
   const { users, currentUser, updateClientDetails, clients } = useApp();
   const [isEditing, setIsEditing] = useState(false);
@@ -59,8 +71,16 @@ const ClientDetailsModal = ({ client, onClose }) => {
     gstRate: totalDealGst && total ? Math.round((totalDealGst / total) * 100) : 18,
     totalDealGstAmount: totalDealGst || '',
     totalDealWithGst: totalDealWithGst || '',
-    note: note || ''
+    note: note || '',
+    stage: currentClient.stage || '1. Welcome Mail',
+    managedBy: currentClient.managedBy || '',
+    createdBy: currentClient.createdBy || '',
+    closer: currentClient.closer || ''
   });
+
+  const [selectedServices, setSelectedServices] = useState(services);
+  const [paymentsList, setPaymentsList] = useState(getClientPaymentsList(currentClient));
+  const [searchServiceText, setSearchServiceText] = useState('');
 
   const handleBudgetChange = (value) => {
     const budgetVal = Number(value) || 0;
@@ -106,13 +126,16 @@ const ClientDetailsModal = ({ client, onClose }) => {
     if (editForm.panNumber) parts.push(`[PAN] ${editForm.panNumber.trim()}`);
     if (editForm.gstNumber) parts.push(`[GST] ${editForm.gstNumber.trim()}`);
     
-    // Preserve existing payments in feedback
-    const payments = getClientPaymentsList(currentClient);
-    payments.forEach(p => {
-      if (p.amount && p.date) parts.push(`[Payment ₹${p.amount} on ${p.date}]${p.verified ? ' [Verified]' : ''}`);
+    // Save payments from paymentsList
+    let totalCollected = 0;
+    paymentsList.forEach(p => {
+      if (p.amount && p.date) {
+        parts.push(`[Payment ₹${p.amount} on ${p.date}][Verified]`);
+        totalCollected += Number(p.amount) || 0;
+      }
     });
 
-    if (services.length) parts.push(`[Services] ${services.join('; ')}`);
+    if (selectedServices.length) parts.push(`[Services] ${selectedServices.join('; ')}`);
     if (editForm.note) parts.push(editForm.note);
 
     updateClientDetails(currentClient.id, {
@@ -121,7 +144,14 @@ const ClientDetailsModal = ({ client, onClose }) => {
       phone: editForm.phone,
       city: editForm.city,
       totalDealAmount: budgetVal,
-      feedback: parts.join('\n\n')
+      feedback: parts.join('\n\n'),
+      stage: editForm.stage,
+      managedBy: editForm.managedBy || null,
+      createdBy: editForm.createdBy || null,
+      closer: editForm.closer || null,
+      service: selectedServices,
+      paymentAmount: totalCollected,
+      paymentStatus: totalCollected >= tdWithGst && tdWithGst > 0 ? 'Completed' : 'Pending'
     });
     setIsEditing(false);
   };
@@ -131,17 +161,45 @@ const ClientDetailsModal = ({ client, onClose }) => {
       <div style={{ background: 'var(--bg-primary)', borderRadius: '1rem', width: '100%', maxWidth: '550px', boxShadow: 'var(--shadow-xl)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh', border: '1px solid var(--border-color)' }} onClick={e => e.stopPropagation()}>
         
         {/* Header */}
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center', flex: 1 }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: '1.2rem', fontWeight: '700', border: '1px solid var(--border-color)', flexShrink: 0 }}>{initials}</div>
-            <div>
-              <h3 style={{ margin: '0 0 0.3rem', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{client.name}</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center' }}>
-                {company && <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: '500' }}><Building2 size={13} color="var(--text-muted)"/> {company}</span>}
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Calendar size={13} /> Created: {formattedDate}
-                </span>
-              </div>
+            <div style={{ flex: 1 }}>
+              {isEditing ? (
+                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', width: '100%' }}>
+                  <input 
+                    className="form-control" 
+                    type="text" 
+                    value={editForm.name} 
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                    style={{ fontSize: '1.1rem', fontWeight: '700', padding: '0.3rem 0.6rem' }}
+                  />
+                  <select
+                    value={editForm.stage}
+                    onChange={e => setEditForm({ ...editForm, stage: e.target.value })}
+                    style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.85rem', fontWeight: '600', outline: 'none', cursor: 'pointer' }}
+                  >
+                    {STAGES.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <>
+                  <h3 style={{ margin: '0 0 0.3rem', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{client.name}</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center' }}>
+                    {company && <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: '500' }}><Building2 size={13} color="var(--text-muted)"/> {company}</span>}
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Calendar size={13} /> Created: {formattedDate}
+                    </span>
+                    {currentClient.stage && (
+                      <span style={{ fontSize: '0.78rem', fontWeight: '600', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(99,102,241,0.12)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.3)' }}>
+                        Stage: {currentClient.stage}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', color: 'var(--text-muted)' }}>
@@ -155,14 +213,6 @@ const ClientDetailsModal = ({ client, onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Client Name</label>
-                  <input className="form-control" type="text" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Company Name</label>
-                  <input className="form-control" type="text" value={editForm.company} onChange={e => setEditForm({ ...editForm, company: e.target.value })} />
-                </div>
-                <div className="form-group">
                   <label className="form-label">Email</label>
                   <input className="form-control" type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
                 </div>
@@ -171,18 +221,99 @@ const ClientDetailsModal = ({ client, onClose }) => {
                   <input className="form-control" type="tel" maxLength="10" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value.replace(/\D/g, '') })} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">City</label>
-                  <input className="form-control" type="text" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} />
-                </div>
-                <div className="form-group">
                   <label className="form-label">PAN Number</label>
                   <input className="form-control" type="text" maxLength="10" placeholder="e.g. ABCDE1234F" value={editForm.panNumber} onChange={e => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase() })} />
                 </div>
-                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <div className="form-group">
                   <label className="form-label">GST Number</label>
                   <input className="form-control" type="text" maxLength="15" placeholder="e.g. 22AAAAA0000A1Z5" value={editForm.gstNumber} onChange={e => setEditForm({ ...editForm, gstNumber: e.target.value.toUpperCase() })} />
                 </div>
               </div>
+
+              {/* Assignment Badges */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '0.8rem 0 1.2rem 0' }}>
+                 <div style={{ position: 'relative' }}>
+                   <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontWeight: '600' }}>Admin Assignment</label>
+                   <select 
+                     value={editForm.managedBy} 
+                     onChange={e => setEditForm({ ...editForm, managedBy: e.target.value })}
+                     style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '9999px', padding: '0.35rem 0.8rem', fontSize: '0.8rem', fontWeight: '600', outline: 'none', cursor: 'pointer' }}
+                   >
+                     <option value="">🛡️ ASSIGN ADMIN</option>
+                     {users.filter(u => u.role === 'admin').map(u => (
+                       <option key={u.id} value={u.id}>🛡️ {u.name}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 <div style={{ position: 'relative' }}>
+                   <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontWeight: '600' }}>Lead By</label>
+                   <select 
+                     value={editForm.createdBy} 
+                     onChange={e => setEditForm({ ...editForm, createdBy: e.target.value })}
+                     style={{ background: 'rgba(165,180,252,0.1)', color: '#8b5cf6', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '9999px', padding: '0.35rem 0.8rem', fontSize: '0.8rem', fontWeight: '600', outline: 'none', cursor: 'pointer' }}
+                   >
+                     <option value="">👤 LEAD BY</option>
+                     {users.filter(u => u.role === 'sales').map(u => (
+                       <option key={u.id} value={u.id}>👤 {u.name}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 <div style={{ position: 'relative' }}>
+                   <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontWeight: '600' }}>Closed By</label>
+                   <select 
+                     value={editForm.closer} 
+                     onChange={e => setEditForm({ ...editForm, closer: e.target.value })}
+                     style={{ background: 'rgba(253,230,138,0.1)', color: '#b45309', border: '1px solid rgba(217,119,6,0.25)', borderRadius: '9999px', padding: '0.35rem 0.8rem', fontSize: '0.8rem', fontWeight: '600', outline: 'none', cursor: 'pointer' }}
+                   >
+                     <option value="">💰 CLOSED BY</option>
+                     {users.map(u => (
+                       <option key={u.id} value={u.id}>💰 {u.name}</option>
+                     ))}
+                   </select>
+                 </div>
+              </div>
+
+              {/* Services Selector */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.8rem', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>Services Selection</h4>
+                <div style={{ position: 'relative', marginBottom: '0.8rem' }}>
+                  <input 
+                    type="text" 
+                    placeholder="🔍 Search services…" 
+                    value={searchServiceText} 
+                    onChange={e => setSearchServiceText(e.target.value)}
+                    style={{ width: '100%', padding: '0.45rem 0.8rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxHeight: '150px', overflowY: 'auto', padding: '0.2rem' }}>
+                  {ALL_SERVICES.filter(s => s.toLowerCase().includes(searchServiceText.toLowerCase())).map(s => {
+                    const isSel = selectedServices.includes(s);
+                    return (
+                      <span 
+                        key={s} 
+                        onClick={() => setSelectedServices(prev => isSel ? prev.filter(x => x !== s) : [...prev, s])}
+                        style={{ 
+                          fontSize: '0.78rem', 
+                          fontWeight: '500', 
+                          padding: '0.25rem 0.6rem', 
+                          borderRadius: '9999px', 
+                          cursor: 'pointer', 
+                          background: isSel ? 'var(--accent-primary)' : 'var(--bg-secondary)', 
+                          color: isSel ? 'white' : 'var(--text-primary)', 
+                          border: `1px solid ${isSel ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {s} {isSel ? '✕' : '+'}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+
 
               <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                 <h4 style={{ margin: '0 0 1rem', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>Deal Financials</h4>
@@ -209,6 +340,108 @@ const ClientDetailsModal = ({ client, onClose }) => {
                     <label className="form-label">Total Deal GST Amount (₹)</label>
                     <input className="form-control" type="number" min="0" value={editForm.totalDealGstAmount} onChange={e => setEditForm({ ...editForm, totalDealGstAmount: e.target.value })} />
                   </div>
+                </div>
+              </div>
+
+              {/* Payments List */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>Payments</h4>
+                  <button 
+                    type="button" 
+                    onClick={() => setPaymentsList([...paymentsList, { amount: '', date: new Date().toISOString().split('T')[0], verified: true }])}
+                    style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    + Add
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '150px', overflowY: 'auto', padding: '0.2rem' }}>
+                  {paymentsList.map((p, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                      <input 
+                        type="number" 
+                        placeholder="Amount" 
+                        value={p.amount} 
+                        onChange={e => {
+                          const updated = [...paymentsList];
+                          updated[idx].amount = e.target.value;
+                          setPaymentsList(updated);
+                        }}
+                        style={{ flex: 1, padding: '0.4rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                      />
+                      <input 
+                        type="date" 
+                        value={p.date ? (p.date.includes('T') ? p.date.split('T')[0] : p.date) : ''} 
+                        onChange={e => {
+                          const updated = [...paymentsList];
+                          updated[idx].date = e.target.value;
+                          setPaymentsList(updated);
+                        }}
+                        style={{ flex: 1, padding: '0.4rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setPaymentsList(paymentsList.filter((_, i) => i !== idx))}
+                        style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '1rem', cursor: 'pointer' }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                  {paymentsList.length === 0 && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem' }}>No payments added yet.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payments List */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>Payments</h4>
+                  <button 
+                    type="button" 
+                    onClick={() => setPaymentsList([...paymentsList, { amount: '', date: new Date().toISOString().split('T')[0], verified: true }])}
+                    style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    + Add
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '150px', overflowY: 'auto', padding: '0.2rem' }}>
+                  {paymentsList.map((p, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                      <input 
+                        type="number" 
+                        placeholder="Amount" 
+                        value={p.amount} 
+                        onChange={e => {
+                          const updated = [...paymentsList];
+                          updated[idx].amount = e.target.value;
+                          setPaymentsList(updated);
+                        }}
+                        style={{ flex: 1, padding: '0.4rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                      />
+                      <input 
+                        type="date" 
+                        value={p.date ? (p.date.includes('T') ? p.date.split('T')[0] : p.date) : ''} 
+                        onChange={e => {
+                          const updated = [...paymentsList];
+                          updated[idx].date = e.target.value;
+                          setPaymentsList(updated);
+                        }}
+                        style={{ flex: 1, padding: '0.4rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setPaymentsList(paymentsList.filter((_, i) => i !== idx))}
+                        style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '1rem', cursor: 'pointer' }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                  {paymentsList.length === 0 && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem' }}>No payments added yet.</div>
+                  )}
                 </div>
               </div>
 
@@ -242,12 +475,15 @@ const ClientDetailsModal = ({ client, onClose }) => {
                 </div>
               </div>
 
+
+
               {/* Services & Team */}
               <h4 style={{ margin: '0 0 1rem', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Services & Team</h4>
               <div style={{ border: '1px solid var(--border-color)', padding: '1.2rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.2rem' }}>
                   {currentClient.createdBy && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Lead by: <strong style={{ color: 'var(--text-primary)' }}>{creatorName(currentClient.createdBy)}</strong></div>}
                   {currentClient.closer && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Closed by: <strong style={{ color: 'var(--text-primary)' }}>{creatorName(currentClient.closer)}</strong></div>}
+                  {currentClient.managedBy && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Assigned Admin: <strong style={{ color: 'var(--text-primary)' }}>{creatorName(currentClient.managedBy)}</strong></div>}
                 </div>
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
