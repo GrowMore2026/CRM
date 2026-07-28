@@ -192,10 +192,40 @@ const ClientDetailsModal = ({ client, onClose }) => {
                     <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Calendar size={13} /> Created: {formattedDate}
                     </span>
-                    {currentClient.stage && (
-                      <span style={{ fontSize: '0.78rem', fontWeight: '600', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(99,102,241,0.12)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.3)' }}>
-                        Stage: {currentClient.stage}
-                      </span>
+                    {(['superadmin', 'admin'].includes(currentUser?.role)) ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.3rem 0.75rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>Stage:</span>
+                        <select
+                          value={currentClient.stage || '1. Welcome Mail'}
+                          onChange={(e) => updateClientDetails(currentClient.id, { stage: e.target.value })}
+                          style={{ 
+                            background: 'transparent', 
+                            color: 'var(--text-primary)', 
+                            border: 'none', 
+                            fontSize: '0.8rem', 
+                            fontWeight: '700', 
+                            outline: 'none', 
+                            cursor: 'pointer', 
+                            appearance: 'none',
+                            WebkitAppearance: 'none',
+                            paddingRight: '1.25rem',
+                            backgroundImage: 'url("data:image/svg+xml;utf8,<svg fill=\'%236366f1\' height=\'18\' viewBox=\'0 0 24 24\' width=\'18\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>")',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right center',
+                            minWidth: '150px'
+                          }}
+                        >
+                          {STAGES.map(s => (
+                            <option key={s} value={s} style={{ color: 'var(--text-primary)', background: 'var(--bg-primary)', padding: '0.5rem' }}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      currentClient.stage && (
+                        <span style={{ fontSize: '0.78rem', fontWeight: '600', padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
+                          Stage: {currentClient.stage}
+                        </span>
+                      )
                     )}
                   </div>
                 </>
@@ -394,56 +424,7 @@ const ClientDetailsModal = ({ client, onClose }) => {
                 </div>
               </div>
 
-              {/* Payments List */}
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>Payments</h4>
-                  <button 
-                    type="button" 
-                    onClick={() => setPaymentsList([...paymentsList, { amount: '', date: new Date().toISOString().split('T')[0], verified: true }])}
-                    style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '150px', overflowY: 'auto', padding: '0.2rem' }}>
-                  {paymentsList.map((p, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                      <input 
-                        type="number" 
-                        placeholder="Amount" 
-                        value={p.amount} 
-                        onChange={e => {
-                          const updated = [...paymentsList];
-                          updated[idx].amount = e.target.value;
-                          setPaymentsList(updated);
-                        }}
-                        style={{ flex: 1, padding: '0.4rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                      />
-                      <input 
-                        type="date" 
-                        value={p.date ? (p.date.includes('T') ? p.date.split('T')[0] : p.date) : ''} 
-                        onChange={e => {
-                          const updated = [...paymentsList];
-                          updated[idx].date = e.target.value;
-                          setPaymentsList(updated);
-                        }}
-                        style={{ flex: 1, padding: '0.4rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => setPaymentsList(paymentsList.filter((_, i) => i !== idx))}
-                        style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '1rem', cursor: 'pointer' }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
-                  {paymentsList.length === 0 && (
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem' }}>No payments added yet.</div>
-                  )}
-                </div>
-              </div>
+
 
               <div className="form-group">
                 <label className="form-label">Notes</label>

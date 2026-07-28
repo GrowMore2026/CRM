@@ -125,10 +125,8 @@ const Layout = () => {
   const navLinks = {
     admin: [
       { path: '/admin', label: 'Dashboard', icon: <HiOutlineSquares2X2 size={24} /> },
-      { path: '/admin/add-client', label: 'Add New Client', icon: <HiOutlineUserPlus size={24} /> },
       { path: '/admin/clients', label: 'My Clients', icon: <HiOutlineBriefcase size={24} /> },
       { path: '/admin/completed', label: 'Completed Documents', icon: <HiOutlineClipboardDocumentCheck size={24} /> },
-      { path: '/payment-history', label: 'Payment History', icon: <HiOutlineWallet size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },

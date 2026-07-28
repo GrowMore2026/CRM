@@ -1515,12 +1515,27 @@ const PIPELINE_STAGES = [
 
 // Admin's own clients — filtered to managedBy === currentUser.id, optionally by ?stage= param
 const MyClientsAdmin = () => {
-  const { clients, currentUser, setSelectedClient } = useApp();
+  const { clients, currentUser, setSelectedClient, users } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const stageParam = searchParams.get('stage');
 
-  const myClients = clients.filter(c => c.managedBy === currentUser?.id);
+  const baseClients = clients.filter(c => c.managedBy === currentUser?.id);
+
+  const filteredClients = baseClients.filter(c => {
+    if (!stageParam) return true;
+    const services = getClientServicesList(c) || [];
+    if (services.length === 0) {
+      const specificStage = c.stage || '1. Welcome Mail';
+      return specificStage === stageParam;
+    }
+    let hasStage = false;
+    services.forEach(s => {
+      const specificStage = (c.service_stages && c.service_stages[s]) || c.stage || '1. Welcome Mail';
+      if (specificStage === stageParam) hasStage = true;
+    });
+    return hasStage;
+  });
 
   const title = 'My Clients';
 
@@ -1551,7 +1566,7 @@ const MyClientsAdmin = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
         {PIPELINE_STAGES.map(stage => {
           let count = 0;
-          myClients.forEach(c => {
+          baseClients.forEach(c => {
             const services = getClientServicesList(c) || [];
             if (services.length === 0) {
               const specificStage = c.stage || '1. Welcome Mail';
@@ -1566,29 +1581,116 @@ const MyClientsAdmin = () => {
           return (
             <div
               key={stage.key}
+              onClick={() => setStage(stage.key)}
+              className="card stat-card"
               style={{
-                background: 'var(--bg-secondary)',
-                border: `2px solid ${stage.border}`,
-                borderRadius: 'var(--radius-xl)',
-                padding: '0.75rem 0.8rem',
+                padding: '1.25rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                cursor: 'pointer',
+                border: stageParam === stage.key ? `1px solid ${stage.color}` : '1px solid var(--border-color)',
+                boxShadow: stageParam === stage.key ? `0 4px 12px ${stage.color}20` : 'var(--shadow-sm)',
+                transform: stageParam === stage.key ? 'translateY(-2px)' : 'none',
+                background: stageParam === stage.key ? `${stage.color}08` : 'var(--bg-secondary)',
+                transition: 'all 0.2s ease'
               }}
             >
-              <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>{stage.icon}</div>
-              <div style={{ fontSize: '0.72rem', fontWeight: '700', color: stage.color, lineHeight: 1.3, marginBottom: '0.3rem' }}>{stage.label}</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)' }}>{count}</div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>service{count !== 1 ? 's' : ''}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ padding: '0.6rem', background: `${stage.color}15`, color: stage.color, borderRadius: '12px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
+                  {stage.icon}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.3rem' }}>{stage.label}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.7rem', fontWeight: '800', color: 'var(--text-primary)' }}>{count}</h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>services</span>
+                </div>
+              </div>
             </div>
           );
         })}
       </div>
 
       {/* ── Client list ── */}
-      <AllClientsAdmin
-        preFilteredClients={myClients}
-        processFilter="Under Process"
-        titleOverride={title}
-        readOnly={false}
-      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+        {filteredClients.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            No clients match this filter.
+          </div>
+        ) : filteredClients.map(c => {
+          const company = getClientCompanyName(c);
+          const services = getClientServicesList(c);
+          const creatorName = (id) => users.find(u => u.id === id)?.name || 'Sales';
+          const closerName = c.closer ? (users.find(u => u.id === c.closer)?.name || 'Sales') : null;
+          const total = Number(c.totalDealAmount) || 0;
+          const collected = Number(c.paymentAmount) || 0;
+          const pct = total > 0 ? Math.min(100, Math.round((collected / total) * 100)) : 0;
+          const cInitials = (c.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+          return (
+            <div 
+              key={c.id} 
+              className="card" 
+              onClick={() => setSelectedClient(c)}
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.9rem', flexShrink: 0 }}>
+                  {cInitials}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-primary)' }}>{c.name}</div>
+                  {c.email && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.email}</div>}
+                </div>
+              </div>
+
+              {company && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><Building2 size={14} color="var(--accent-primary)" /> {company}</div>}
+              {c.phone && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={14} color="var(--accent-primary)" /> {c.phone}</div>}
+
+              {services.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>Services:</div>
+                  {services.map(s => {
+                    const sStageKey = (c.service_stages && c.service_stages[s]) || c.stage || '1. Welcome Mail';
+                    const stgInfo = PIPELINE_STAGES.find(ps => ps.key === sStageKey) || { label: sStageKey };
+                    return (
+                      <div key={s} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                        <span style={{ color: 'var(--text-primary)' }}>{s}</span>
+                        <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{stgInfo.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Stage: </span>
+                  <strong style={{ color: 'var(--text-primary)' }}>{c.stage || 'Not Started'}</strong>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                {c.createdBy && <span>Lead: {creatorName(c.createdBy)}</span>}
+                {closerName && <span>Closer: {closerName}</span>}
+              </div>
+
+              {(total > 0 || collected > 0) && (
+                <div style={{ marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Collected: ₹{collected.toLocaleString('en-IN')}</span>
+                    <strong style={{ color: 'var(--text-primary)' }}>Total: ₹{total.toLocaleString('en-IN')}</strong>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--bg-secondary)', borderRadius: '999px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: 'var(--accent-primary)', borderRadius: '999px' }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

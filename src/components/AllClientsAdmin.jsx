@@ -288,7 +288,6 @@ const AllClientsAdmin = ({ paymentFilter, processFilter, stageFilter, readOnly, 
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        <h1 className="text-h1" style={{ margin: 0, flex: 'none' }}>{title}</h1>
         {/* Search input */}
         <SearchBar 
           value={searchQ} 
@@ -309,89 +308,98 @@ const AllClientsAdmin = ({ paymentFilter, processFilter, stageFilter, readOnly, 
         </div>
       ) : (
 
-        <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '1rem', width: '40px', textAlign: 'center' }}>
-                  <input type="checkbox" style={{ cursor: 'pointer' }} readOnly />
-                </th>
-                <th style={{ padding: '1rem', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.05em' }}>ACTIONS</th>
-                <th style={{ padding: '1rem', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.05em' }}>STATUS</th>
-                <th style={{ padding: '1rem', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.05em' }}>NAME</th>
-                <th style={{ padding: '1rem', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.05em' }}>PHONE</th>
-                <th style={{ padding: '1rem', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.05em' }}>CITY</th>
-                <th style={{ padding: '1rem', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.05em' }}>SERVICE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayItems.map(({ c, activeService }) => {
-                const total = Number(c.totalDealAmount ?? getClientBudgetAmount(c)) || 0;
-                const totalDealGst = getClientTotalDealGst(c);
-                const totalWithGstVal = getClientTotalDealWithGst(c) || (total + totalDealGst);
-                const collected = Number(c.paymentAmount) || 0;
-                const remaining = totalWithGstVal - collected;
-                const fullPaid = remaining <= 0 && totalWithGstVal > 0;
-                const services = getClientServicesList(c);
-                const company = getClientCompanyName(c);
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          {displayItems.map(({ c, activeService }) => {
+            const company = getClientCompanyName(c);
+            const services = getClientServicesList(c) || [];
+            const creatorName = (id) => users.find(u => u.id === id)?.name || 'Sales';
+            const closerName = c.closer ? (users.find(u => u.id === c.closer)?.name || 'Sales') : null;
+            const total = Number(c.totalDealAmount ?? getClientBudgetAmount(c)) || 0;
+            const collected = Number(c.paymentAmount) || 0;
+            const pct = total > 0 ? Math.min(100, Math.round((collected / total) * 100)) : 0;
+            const cInitials = (c.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
-                const statusColor = fullPaid ? { bg: '#e6fcf5', color: '#0ca678' } : { bg: '#fff9db', color: '#f59f00' };
-                const statusText = fullPaid ? 'Completed' : 'Pending';
+            return (
+              <div 
+                key={`${c.id}-${activeService || 'none'}`}
+                className="card" 
+                onClick={() => setSelectedClient(c)}
+                style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer', position: 'relative' }}
+              >
+                {canDelete && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
+                    style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--danger-color)', zIndex: 10 }}
+                    title="Delete Client"
+                  >
+                    🗑️
+                  </button>
+                )}
+                
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.9rem', flexShrink: 0 }}>
+                    {cInitials}
+                  </div>
+                  <div style={{ paddingRight: canDelete ? '24px' : '0' }}>
+                    <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-primary)' }}>{c.name}</div>
+                    {c.email && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.email}</div>}
+                  </div>
+                </div>
 
-                return (
-                  <tr key={`${c.id}-${activeService || 'none'}`} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
-                    <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                      <input type="checkbox" style={{ cursor: 'pointer' }} readOnly />
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <button 
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: 0 }} 
-                          onClick={() => setSelectedClient(c)}
-                          title="Edit Client"
-                        >
-                          ✏️
-                        </button>
-                        {canDelete && (
-                          <button 
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }} 
-                            onClick={() => setConfirmDeleteId(c.id)}
-                            title="Delete Client"
-                          >
-                            🗑️
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span style={{ 
-                        display: 'inline-block', 
-                        padding: '0.25rem 0.6rem', 
-                        borderRadius: '4px', 
-                        fontSize: '0.75rem', 
-                        fontWeight: '600', 
-                        background: statusColor.bg, 
-                        color: statusColor.color 
-                      }}>
-                        {statusText}
+                {company && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>🏢 {company}</div>}
+                {c.phone && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>📞 {c.phone}</div>}
+
+                {activeService ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>Service:</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: 'var(--text-primary)' }}>{activeService}</span>
+                      <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        {((c.service_stages && c.service_stages[activeService]) || c.stage || '1. Welcome Mail').replace(/^\d+\.\s*/, '')}
                       </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <div>
-                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase' }}>{c.name}</div>
-                        {company && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{company}</div>}
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)' }}>{c.phone || '—'}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)' }}>{c.city || '—'}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)' }}>
-                      {activeService ? activeService : (services.length > 0 ? services.join(', ') : '—')}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                ) : services.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>Services:</div>
+                    {services.map(s => {
+                      const sStageKey = (c.service_stages && c.service_stages[s]) || c.stage || '1. Welcome Mail';
+                      const stgInfo = STAGES.find(ps => ps === sStageKey) || sStageKey;
+                      const label = typeof stgInfo === 'string' ? stgInfo : stgInfo;
+                      return (
+                        <div key={s} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                          <span style={{ color: 'var(--text-primary)' }}>{s}</span>
+                          <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{label.replace(/^\d+\.\s*/, '')}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Stage: </span>
+                    <strong style={{ color: 'var(--text-primary)' }}>{(c.stage || 'Not Started').replace(/^\d+\.\s*/, '')}</strong>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                  {c.createdBy && <span>Lead: {creatorName(c.createdBy)}</span>}
+                  {closerName && <span>Closer: {closerName}</span>}
+                </div>
+
+                {(total > 0 || collected > 0) && (
+                  <div style={{ marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Collected: ₹{collected.toLocaleString('en-IN')}</span>
+                      <strong style={{ color: 'var(--text-primary)' }}>Total: ₹{total.toLocaleString('en-IN')}</strong>
+                    </div>
+                    <div style={{ height: '4px', background: 'var(--bg-secondary)', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: 'var(--accent-primary)', borderRadius: '999px' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
