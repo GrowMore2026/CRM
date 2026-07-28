@@ -1,0 +1,4 @@
+ALTER TABLE public.leads 
+ADD COLUMN IF NOT EXISTS notes TEXT, 
+ADD COLUMN IF NOT EXISTS dynamic_data JSONB, 
+ADD COLUMN IF NOT EXISTS list_id UUID REFERENCES public.lead_lists(id);
