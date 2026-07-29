@@ -544,6 +544,7 @@ const MyClients = ({ isLeads = false }) => {
       payments: payments,
       status: c.status || 'CREATED',
       notes: c.notes || c.dynamic_data?.notes || '',
+      dynamic_data: c.dynamic_data || {},
     });
   };
 
@@ -580,7 +581,8 @@ const MyClients = ({ isLeads = false }) => {
         budget: Number(editForm.budget) || 0,
         score: Number(editForm.totalDeal) || 0, // Reusing totalDeal for score in leads edit form temporarily
         status: editForm.status,
-        notes: editForm.notes
+        notes: editForm.notes,
+        dynamic_data: editForm.dynamic_data
       });
     } else {
       updateClientDetails(clientId, {
@@ -912,6 +914,7 @@ const MyClients = ({ isLeads = false }) => {
               <tr style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--border-color)' }}>
                 {currentUser?.role !== 'sales' && <th style={{ padding: '1rem 1.2rem' }}><input type="checkbox" style={{ cursor: 'pointer' }} /></th>}
                 <th style={{ padding: '1rem 1.2rem', whiteSpace: 'nowrap' }}>Name</th>
+                <th style={{ padding: '1rem 1.2rem', whiteSpace: 'nowrap' }}>Company</th>
                 <th style={{ padding: '1rem 1.2rem', whiteSpace: 'nowrap' }}>Phone</th>
                 <th style={{ padding: '1rem 1.2rem', whiteSpace: 'nowrap' }}>Email</th>
                 <th style={{ padding: '1rem 1.2rem', whiteSpace: 'nowrap' }}>City</th>
@@ -936,6 +939,7 @@ const MyClients = ({ isLeads = false }) => {
                   <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s ease', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'} onClick={() => startEdit(c)}>
                     {currentUser?.role !== 'sales' && <td style={{ padding: '1rem 1.2rem' }} onClick={e => e.stopPropagation()}><input type="checkbox" style={{ cursor: 'pointer' }} /></td>}
                     <td style={{ padding: '1rem 1.2rem', fontWeight: '500', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{c.name || '-'}</td>
+                    <td style={{ padding: '1rem 1.2rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.company || c.dynamic_data?.company || '-'}</td>
                     <td style={{ padding: '1rem 1.2rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.phone || '-'}</td>
                     <td style={{ padding: '1rem 1.2rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.email || '-'}</td>
                     <td style={{ padding: '1rem 1.2rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{cCity}</td>
@@ -1094,6 +1098,19 @@ const MyClients = ({ isLeads = false }) => {
                   </div>
                 </div>
 
+                {Object.keys(editForm.dynamic_data || {}).length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                    {Object.keys(editForm.dynamic_data).map(key => {
+                      if (['company', 'city', 'state', 'notes', 'score', 'budget', 'service', 'campaign'].includes(key.toLowerCase())) return null;
+                      return (
+                        <div key={key}>
+                          <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'block', textTransform: 'capitalize' }}>{key}</label>
+                          <input className="form-control" style={{ fontSize: '0.9rem', padding: '0.5rem', opacity: currentUser?.role === 'sales' ? 0.7 : 1 }} disabled={currentUser?.role === 'sales'} value={editForm.dynamic_data[key] || ''} onChange={e => setEditForm({ ...editForm, dynamic_data: { ...editForm.dynamic_data, [key]: e.target.value } })} placeholder={key} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'block' }}>Sales Notes</label>

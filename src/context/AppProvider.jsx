@@ -42,6 +42,7 @@ export const AppProvider = ({ children }) => {
   const [incentives, setIncentives] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [rawLeads, setRawLeads] = useState([]);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [loadError,   setLoadError]   = useState(null);
@@ -69,6 +70,7 @@ export const AppProvider = ({ children }) => {
         supabase.from('leads').select('*'),
         supabase.from('lead_lists').select('*'),
         supabase.from('holidays').select('*'),
+        supabase.from('raw_leads').select('*').order('created_at', { ascending: false }),
       ];
 
       if (currentUserRef.current) {
@@ -78,10 +80,13 @@ export const AppProvider = ({ children }) => {
       }
 
       const results = await Promise.all(promises);
-      const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes] = results;
-      const notifRes = currentUserRef.current ? results[6] : { data: [], error: null };
+      const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes, rawLeadsRes] = results;
+      const notifRes = currentUserRef.current ? results[7] : { data: [], error: null };
 
       const errors = [usersRes.error, tasksRes.error, clientsRes.error, leadsRes.error, leadListsRes.error, holidaysRes.error];
+      if (rawLeadsRes?.error && rawLeadsRes.error.code !== '42P01') {
+        errors.push(rawLeadsRes.error);
+      }
       if (notifRes.error && notifRes.error.code !== '42P01') {
         console.error('[supabase] notifications load error:', notifRes.error);
       }
@@ -102,6 +107,7 @@ export const AppProvider = ({ children }) => {
       setLeads(leadsRes.data ?? []);
       setLeadLists(leadListsRes.data ?? []);
       setHolidays(holidaysRes.data ?? []);
+      setRawLeads(rawLeadsRes?.data ?? []);
       setNotifications(notifRes.data ?? []);
       setDataLoading(false);
     } catch (err) {
@@ -695,7 +701,7 @@ export const AppProvider = ({ children }) => {
   };
 
   // ── Leads ──────────────────────────────────────────────────────────────────
-  const addLead = (leadData) => {
+  const addLead = async (leadData) => {
     // Only add fields that actually have a value to avoid schema cache errors
     // if the database table is missing columns like 'budget' or 'company'.
     const baseRow = {
@@ -703,7 +709,7 @@ export const AppProvider = ({ children }) => {
       source: leadData.source || 'Facebook Ads',
       status: leadData.status || 'CREATED',
     };
-    const knownCols = ['id', 'created_at', 'name', 'email', 'phone', 'type_of_service', 'city', 'state', 'source', 'status', 'createdBy', 'managedBy', 'list_id', 'dynamic_data'];
+    const knownCols = ['id', 'created_at', 'name', 'company', 'email', 'phone', 'type_of_service', 'city', 'state', 'source', 'status', 'createdBy', 'managedBy', 'list_id', 'dynamic_data'];
     const dynamicData = { ...(leadData.dynamic_data || {}) };
 
     if (leadData.email) baseRow.email = leadData.email;
@@ -714,9 +720,9 @@ export const AppProvider = ({ children }) => {
     if (leadData.city) baseRow.city = leadData.city;
     if (leadData.state) baseRow.state = leadData.state;
     if (leadData.list_id) baseRow.list_id = leadData.list_id;
+    if (leadData.company) baseRow.company = leadData.company;
 
     // Move unknown columns to dynamicData
-    if (leadData.company) dynamicData.company = leadData.company;
     if (leadData.campaign) dynamicData.campaign = leadData.campaign;
     if (leadData.score !== undefined && leadData.score !== 0) dynamicData.score = leadData.score;
     if (leadData.budget !== undefined && leadData.budget !== 0) dynamicData.budget = leadData.budget;
@@ -727,33 +733,44 @@ export const AppProvider = ({ children }) => {
       baseRow.dynamic_data = dynamicData;
     }
 
-    void supabase.from('leads').insert([baseRow]).select().then(({ data, error }) => {
-      if (error) {
-        console.error('[supabase] addLead:', error);
-        setActionError(`Lead not saved: ${error.message || error.code}.`);
-        return;
-      }
-      setActionError(null);
-      if (data?.length > 0) {
-        setLeads(prev => {
-          if (prev.some(l => l.id === data[0].id)) return prev;
-          return [...prev, data[0]];
-        });
-        const creatorName = users.find(u => u.id === leadData.createdBy)?.name || leadData.createdBy;
-        notifyAdmins(
-          `🎯 ${creatorName} added a new lead: "${leadData.name}"`,
-          users,
-          leadData.createdBy
-        );
-      }
-    });
+    const { data, error } = await supabase.from('leads').insert([baseRow]).select();
+    if (error) {
+      console.error('[supabase] addLead:', error);
+      setActionError(`Lead not saved: ${error.message || error.code}.`);
+      return;
+    }
+    setActionError(null);
+    if (data?.length > 0) {
+      setLeads(prev => {
+        if (prev.some(l => l.id === data[0].id)) return prev;
+        return [...prev, data[0]];
+      });
+      const creatorName = users.find(u => u.id === leadData.createdBy)?.name || leadData.createdBy;
+      notifyAdmins(
+        `🎯 ${creatorName} added a new lead: "${leadData.name}"`,
+        users,
+        leadData.createdBy
+      );
+    }
+  };
+
+  const addRawLeads = async (leadsArray) => {
+    const { data, error } = await supabase.from('raw_leads').insert(leadsArray).select();
+    if (error) {
+      console.error('[supabase] addRawLeads error:', error);
+      throw error;
+    }
+    if (data?.length > 0) {
+      setRawLeads(prev => [...data, ...prev]);
+    }
+    return data;
   };
 
   const updateLeadDetails = (leadId, details) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, ...details } : l));
     
     // The leads table only has certain columns. Unknown columns cause Supabase to reject the update.
-    const knownCols = ['id', 'created_at', 'name', 'email', 'phone', 'type_of_service', 'city', 'state', 'source', 'status', 'createdBy', 'managedBy', 'list_id', 'dynamic_data'];
+    const knownCols = ['id', 'created_at', 'name', 'company', 'email', 'phone', 'type_of_service', 'city', 'state', 'source', 'status', 'createdBy', 'managedBy', 'list_id', 'dynamic_data'];
     const patch = {};
     const dynamicDataUpdate = {};
     let hasDynamicData = false;
@@ -925,6 +942,7 @@ export const AppProvider = ({ children }) => {
       addTask, updateTaskStatus,
       addClient, transferClient, registerPayment, updateClientStatus, updateClientStage, updateClientServiceStage, updateClientDetails, addLoanFile,
       addLead, updateLeadDetails, removeLead, convertLeadToClient, assignLeadListToSales, addLeadList, updateLeadList, removeLeadList, clearLeadList,
+      rawLeads, addRawLeads,
       selectedClient,
       setSelectedClient, removeClient, assignClientToAdmin,
       markIncentivesPaid, markNotificationRead, markAllNotificationsRead, deleteNotification,

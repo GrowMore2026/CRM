@@ -13,6 +13,7 @@ import LoanClients from './pages/LoanClients';
 import PaymentHistory from './pages/PaymentHistory';
 import HolidayList from './pages/HolidayList';
 import Profile from './pages/Profile';
+import RawLeads from './pages/RawLeads';
 import NotificationsPage from './pages/NotificationsPage';
 import Settings from './pages/Settings';
 
@@ -130,6 +131,7 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="holidays" element={<HolidayList />} />
+          <Route path="raw-leads" element={<RawLeads />} />
           <Route path="profile" element={<Profile />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<Settings />} />

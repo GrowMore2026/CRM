@@ -4,7 +4,7 @@ import { X, Trash2, Plus, UploadCloud, Download } from 'lucide-react';
 import { useApp } from '../context/AppProvider';
 
 const CreateLeadListModal = ({ isOpen, onClose }) => {
-  const { addLeadList, addLead, currentUser } = useApp();
+  const { addLeadList, addLead, currentUser, users } = useApp();
 
   const [listName, setListName] = useState('');
   const [description, setDescription] = useState('');
@@ -13,12 +13,12 @@ const CreateLeadListModal = ({ isOpen, onClose }) => {
 
   // Default columns
   const [columns, setColumns] = useState([
-    { id: '1', name: 'Name' },
-    { id: '2', name: 'Phone Number' },
-    { id: '3', name: 'Email Address' },
-    { id: '4', name: 'Type of Service' },
-    { id: '5', name: 'City' },
-    { id: '6', name: 'State' }
+    { id: '1', name: 'Date' },
+    { id: '2', name: 'Name' },
+    { id: '3', name: 'Phone Number' },
+    { id: '4', name: 'Company Name' },
+    { id: '5', name: 'State' },
+    { id: '6', name: 'Sales Employee' }
   ]);
   const [newColumnName, setNewColumnName] = useState('');
 
@@ -33,12 +33,12 @@ const CreateLeadListModal = ({ isOpen, onClose }) => {
       setDescription('');
       setLeadSource('Open');
       setColumns([
-        { id: '1', name: 'Name' },
-        { id: '2', name: 'Phone Number' },
-        { id: '3', name: 'Email Address' },
-        { id: '4', name: 'Type of Service' },
-        { id: '5', name: 'City' },
-        { id: '6', name: 'State' }
+        { id: '1', name: 'Date' },
+        { id: '2', name: 'Name' },
+        { id: '3', name: 'Phone Number' },
+        { id: '4', name: 'Company Name' },
+        { id: '5', name: 'State' },
+        { id: '6', name: 'Sales Employee' }
       ]);
       setNewColumnName('');
       setCsvFile(null);
@@ -174,12 +174,23 @@ const CreateLeadListModal = ({ isOpen, onClose }) => {
 
         Object.keys(row).forEach(key => {
           const lkey = key.toLowerCase();
-          if (lkey.includes('name')) leadObj.name = row[key];
+          if (lkey === 'name' || lkey === 'client name' || lkey === 'full name') leadObj.name = row[key];
+          else if (lkey.includes('company')) leadObj.company = row[key];
           else if (lkey.includes('email')) leadObj.email = row[key];
-          else if (lkey.includes('phone')) leadObj.phone = row[key];
+          else if (lkey.includes('phone') || lkey === 'contact') leadObj.phone = row[key];
           else if (lkey.includes('service') || lkey.includes('type')) leadObj.type_of_service = row[key];
           else if (lkey.includes('city')) leadObj.city = row[key];
           else if (lkey.includes('state') && !lkey.includes('status')) leadObj.state = row[key];
+          else if (lkey.includes('sales employee') || lkey.includes('assign') || lkey.includes('managed')) {
+            const employeeName = row[key].trim().toLowerCase();
+            if (users && employeeName) {
+              const foundUser = users.find(u => u.name?.toLowerCase() === employeeName);
+              if (foundUser) {
+                leadObj.managedBy = foundUser.id;
+              }
+            }
+            leadObj.dynamic_data[key] = row[key]; // also save as text just in case
+          }
           else leadObj.dynamic_data[key] = row[key];
         });
 

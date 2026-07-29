@@ -924,6 +924,7 @@ const DigitalMarketingLeadListView = () => {
                 <input type="checkbox" checked={selectedLeads.length > 0 && selectedLeads.length === filteredLeads.length} onChange={handleSelectAll} style={{ cursor: 'pointer' }} />
               </th>
               <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Name</th>
+              <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Company</th>
               <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Phone</th>
               <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Email</th>
               <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>City</th>
@@ -944,6 +945,7 @@ const DigitalMarketingLeadListView = () => {
                   <input type="checkbox" checked={selectedLeads.includes(lead.id)} onChange={() => toggleSelect(lead.id)} style={{ cursor: 'pointer' }} />
                 </td>
                 <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '600' }}>{lead.name}</td>
+                <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{lead.company || lead.dynamic_data?.company || '-'}</td>
                 <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{lead.phone || '-'}</td>
                 <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{lead.email || '-'}</td>
                 <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{lead.city || '-'}</td>

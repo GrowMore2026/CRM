@@ -131,6 +131,8 @@ export function getClientBudgetAmount(client) {
 export function getClientCompanyName(client) {
   const col = client.company;
   if (col != null && String(col).trim()) return String(col).trim();
+  const dynCol = client.dynamic_data?.company;
+  if (dynCol != null && String(dynCol).trim()) return String(dynCol).trim();
   const { company } = parseClientFeedback(getClientFeedbackText(client));
   return company || '';
 }
