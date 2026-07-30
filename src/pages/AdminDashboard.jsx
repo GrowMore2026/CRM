@@ -17,12 +17,13 @@ import AddNewLoanFile from './AddNewLoanFile';
 
 // AdminOverview: stats pulled from ALL connected tables
 const AdminOverview = ({ readOnly }) => {
-  const { users, tasks, clients, currentUser, setSelectedClient, leads, leadLists, rawLeads } = useApp();
+  const { users, tasks, clients, currentUser, setSelectedClient, leads, leadLists, rawLeads, loanRawLeads } = useApp();
   const navigate = useNavigate();
   const [searchEmp, setSearchEmp] = useState('');
   const [animate, setAnimate] = useState(false);
   const [summaryMonth, setSummaryMonth] = useState(-1);
   const [selectedRawLeadEmployee, setSelectedRawLeadEmployee] = useState('');
+  const [selectedLoanRawLeadEmployee, setSelectedLoanRawLeadEmployee] = useState('');
 
   const [loanFiles, setLoanFiles] = useState([]);
   const [loadingLoans, setLoadingLoans] = useState(false);

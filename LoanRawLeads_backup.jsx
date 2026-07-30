@@ -2,8 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useApp } from '../context/AppProvider';
 import { Upload, FileText, Search, User, Phone, Mail, Building, MapPin, Calendar, Plus, Edit2, Trash2, Eye, ArrowLeft } from 'lucide-react';
 
-const RawLeads = () => {
-  const { currentUser, rawLeads, campaigns, addCampaign, updateCampaign, deleteCampaign, addRawLeads, claimNextRawLead, submitRawLeadStatus, addLead, users } = useApp();
+const LoanRawLeads = () => {
+  const { currentUser, loanRawLeads, loanLoanCampaigns, addLoanCampaign, updateLoanCampaign, deleteLoanCampaign, addLoanRawLeads, claimNextLoanRawLead, submitLoanRawLeadStatus, addLead, users } = useApp();
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQ, setSearchQ] = useState('');
@@ -14,10 +14,10 @@ const RawLeads = () => {
   
   const [uploadingCampaignId, setUploadingCampaignId] = useState(null);
   const [viewingCampaignId, setViewingCampaignId] = useState(null);
-  const [campaignSearchQ, setCampaignSearchQ] = useState('');
+  const [loanCampaignSearchQ, setCampaignSearchQ] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [campaignForm, setCampaignForm] = useState({ name: '', description: '', assigned_to: [] });
+  const [loanCampaignForm, setLoanCampaignForm] = useState({ name: '', description: '', assigned_to: [] });
   const [assigneeSearchQ, setAssigneeSearchQ] = useState('');
 
   const showModal = (msg, type = 'error') => setModalConfig({ show: true, message: msg, type });
@@ -28,16 +28,16 @@ const RawLeads = () => {
   }, [viewingCampaignId, searchQ]);
 
   useEffect(() => {
-    if (currentUser?.role === 'sales') {
-      const existingActive = rawLeads?.find(l => l.claimed_by === currentUser.id && l.status === 'PENDING');
+    if (currentUser?.role === 'loan_employee') {
+      const existingActive = loanRawLeads?.find(l => l.claimed_by === currentUser.id && l.status === 'PENDING');
       setActiveLead(existingActive || null);
     }
-  }, [currentUser, rawLeads]);
+  }, [currentUser, loanRawLeads]);
 
   const handleNextLead = async () => {
     setIsProcessing(true);
     try {
-      const lead = await claimNextRawLead(currentUser.id);
+      const lead = await claimNextLoanRawLead(currentUser.id);
       if (!lead) {
         showModal("No more raw leads available in the queue right now.", 'error');
       } else {
@@ -70,7 +70,7 @@ const RawLeads = () => {
           status: 'CREATED'
         });
       }
-      await submitRawLeadStatus(activeLead.id, leadStatus);
+      await submitLoanRawLeadStatus(activeLead.id, leadStatus);
       setLeadStatus('');
       setActiveLead(null);
       // Wait a moment then fetch next automatically
@@ -82,7 +82,7 @@ const RawLeads = () => {
     }
   };
 
-  const canUpload = currentUser?.role === 'superadmin' || currentUser?.role === 'digital_marketing';
+  const canUpload = currentUser?.role === 'superadmin';
 
   const parseCSV = (file) => {
     return new Promise((resolve, reject) => {
@@ -149,7 +149,7 @@ const RawLeads = () => {
         // Only insert if at least one meaningful field exists
         if (company_name || director_name || phone || email) {
           leadsToInsert.push({
-            campaign_id: uploadingCampaignId,
+            loanCampaign_id: uploadingCampaignId,
             company_name,
             director_name,
             phone,
@@ -164,7 +164,7 @@ const RawLeads = () => {
       }
 
       if (leadsToInsert.length > 0) {
-        await addRawLeads(leadsToInsert);
+        await addLoanRawLeads(leadsToInsert);
         showModal(`Successfully uploaded ${leadsToInsert.length} raw leads!`, 'success');
       } else {
         showModal("No valid leads found in the CSV.", 'error');
@@ -180,21 +180,21 @@ const RawLeads = () => {
 
   const handleCreateCampaign = async (e) => {
     e.preventDefault();
-    if (!campaignForm.name) return showModal("Campaign name is required.", 'error');
+    if (!loanCampaignForm.name) return showModal("Campaign name is required.", 'error');
     setIsProcessing(true);
     try {
-      await addCampaign({
-        name: campaignForm.name,
-        description: campaignForm.description,
-        assigned_to: campaignForm.assigned_to.length > 0 ? campaignForm.assigned_to.join(',') : null,
+      await addLoanCampaign({
+        name: loanCampaignForm.name,
+        description: loanCampaignForm.description,
+        assigned_to: loanCampaignForm.assigned_to.length > 0 ? loanCampaignForm.assigned_to.join(',') : null,
         is_active: true
       });
       setShowCreateModal(false);
-      setCampaignForm({ name: '', description: '', assigned_to: [] });
+      setLoanCampaignForm({ name: '', description: '', assigned_to: [] });
       showModal("Campaign created successfully!", 'success');
     } catch(err) {
       console.error(err);
-      showModal("Error creating campaign: " + err.message, 'error');
+      showModal("Error creating loanCampaign: " + err.message, 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -202,25 +202,25 @@ const RawLeads = () => {
 
   const handleToggleCampaign = async (id, currentStatus) => {
     try {
-      await updateCampaign(id, { is_active: !currentStatus });
+      await updateLoanCampaign(id, { is_active: !currentStatus });
     } catch (err) {
       console.error(err);
-      showModal("Error updating campaign status.", 'error');
+      showModal("Error updating loanCampaign status.", 'error');
     }
   };
 
   const handleDeleteCampaign = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this campaign? All raw leads associated with it will be orphaned or deleted based on your DB rules.')) return;
+    if (!window.confirm('Are you sure you want to delete this loanCampaign? All raw leads associated with it will be orphaned or deleted based on your DB rules.')) return;
     try {
-      await deleteCampaign(id);
+      await deleteLoanCampaign(id);
       showModal("Campaign deleted.", 'success');
     } catch (err) {
       console.error(err);
-      showModal("Error deleting campaign.", 'error');
+      showModal("Error deleting loanCampaign.", 'error');
     }
   };
 
-  const filteredLeads = (rawLeads || []).filter(lead => {
+  const filteredLeads = (loanRawLeads || []).filter(lead => {
     const q = searchQ.toLowerCase();
     return (
       (lead.company_name || '').toLowerCase().includes(q) ||
@@ -231,15 +231,15 @@ const RawLeads = () => {
     );
   });
 
-  const filteredCampaigns = (campaigns || []).filter(camp => {
-    const q = campaignSearchQ.toLowerCase();
+  const filteredLoanCampaigns = (loanLoanCampaigns || []).filter(camp => {
+    const q = loanCampaignSearchQ.toLowerCase();
     return (
       (camp.name || '').toLowerCase().includes(q) ||
       (camp.description || '').toLowerCase().includes(q)
     );
   });
 
-  if (currentUser?.role === 'sales') {
+  if (currentUser?.role === 'loan_employee') {
     return (
       <>
         {modalConfig.show && (
@@ -378,10 +378,10 @@ const RawLeads = () => {
                   onClick={() => setViewingCampaignId(null)}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: '8px', color: 'var(--text-primary)', cursor: 'pointer' }}
                 >
-                  <ArrowLeft size={16} /> Back to Campaigns
+                  <ArrowLeft size={16} /> Back to LoanCampaigns
                 </button>
                 <h2 style={{ color: 'var(--text-primary)', margin: 0 }}>
-                  Campaign: {campaigns?.find(c => c.id === viewingCampaignId)?.name || 'Unknown'}
+                  Campaign: {loanLoanCampaigns?.find(c => c.id === viewingCampaignId)?.name || 'Unknown'}
                 </h2>
               </div>
               <button 
@@ -400,11 +400,12 @@ const RawLeads = () => {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
-                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Company</th>
-                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Name</th>
-                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Phone</th>
-                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Email</th>
-                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Inc. Date</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>First Name</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Last Name</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Number</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Payment Date</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Amount</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Payment Mode</th>
                     <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>State</th>
                     <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Status</th>
                     <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Sales Rep</th>
@@ -413,14 +414,14 @@ const RawLeads = () => {
                 </thead>
                 <tbody>
                   {(() => {
-                    const campaignFilteredLeads = filteredLeads.filter(l => l.campaign_id === viewingCampaignId);
-                    const paginatedLeads = campaignFilteredLeads.slice((currentPage - 1) * 25, currentPage * 25);
+                    const loanCampaignFilteredLeads = filteredLeads.filter(l => l.loanCampaign_id === viewingCampaignId);
+                    const paginatedLeads = loanCampaignFilteredLeads.slice((currentPage - 1) * 25, currentPage * 25);
                     
-                    if (campaignFilteredLeads.length === 0) {
+                    if (loanCampaignFilteredLeads.length === 0) {
                       return (
                         <tr>
                           <td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            No raw leads found in this campaign.
+                            No raw leads found in this loanCampaign.
                           </td>
                         </tr>
                       );
@@ -454,14 +455,14 @@ const RawLeads = () => {
 
             {/* Pagination Controls */}
             {(() => {
-              const campaignFilteredLeads = filteredLeads.filter(l => l.campaign_id === viewingCampaignId);
-              const totalPages = Math.max(1, Math.ceil(campaignFilteredLeads.length / 25));
+              const loanCampaignFilteredLeads = filteredLeads.filter(l => l.loanCampaign_id === viewingCampaignId);
+              const totalPages = Math.max(1, Math.ceil(loanCampaignFilteredLeads.length / 25));
               
               if (totalPages > 1) {
                 return (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '1rem' }}>
                     <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                      Showing {(currentPage - 1) * 25 + 1} to {Math.min(currentPage * 25, campaignFilteredLeads.length)} of {campaignFilteredLeads.length} leads
+                      Showing {(currentPage - 1) * 25 + 1} to {Math.min(currentPage * 25, loanCampaignFilteredLeads.length)} of {loanCampaignFilteredLeads.length} leads
                     </span>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button 
@@ -492,16 +493,16 @@ const RawLeads = () => {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>Lead Campaigns</h2>
-                <p style={{ color: 'var(--text-secondary)' }}>Manage your raw lead upload pools and route them to specific sales employees.</p>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>Lead LoanCampaigns</h2>
+                <p style={{ color: 'var(--text-secondary)' }}>Manage your raw lead upload pools and route them to specific loan employees.</p>
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: '250px' }}>
                   <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.75rem' }} />
                   <input
                     type="text"
-                    placeholder="Search campaigns..."
-                    value={campaignSearchQ}
+                    placeholder="Search loanLoanCampaigns..."
+                    value={loanCampaignSearchQ}
                     onChange={(e) => setCampaignSearchQ(e.target.value)}
                     style={{ border: 'none', background: 'transparent', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '0.95rem' }}
                   />
@@ -524,13 +525,13 @@ const RawLeads = () => {
             />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
-              {filteredCampaigns.length === 0 ? (
+              {filteredLoanCampaigns.length === 0 ? (
                 <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', gridColumn: '1 / -1' }}>
-                  No campaigns found. {campaignSearchQ ? 'Try a different search.' : 'Create one to get started!'}
+                  No loanLoanCampaigns found. {loanCampaignSearchQ ? 'Try a different search.' : 'Create one to get started!'}
                 </div>
               ) : (
-                filteredCampaigns.map(camp => {
-                  const campLeads = (rawLeads || []).filter(l => l.campaign_id === camp.id);
+                filteredLoanCampaigns.map(camp => {
+                  const campLeads = (loanRawLeads || []).filter(l => l.loanCampaign_id === camp.id);
                   const total = campLeads.length;
                   const called = campLeads.filter(l => l.status && l.status !== 'UNASSIGNED' && l.status !== 'PENDING').length;
                   const remaining = total - called;
@@ -612,8 +613,8 @@ const RawLeads = () => {
                 <input 
                   type="text" 
                   required
-                  value={campaignForm.name} 
-                  onChange={e => setCampaignForm({...campaignForm, name: e.target.value})}
+                  value={loanCampaignForm.name} 
+                  onChange={e => setLoanCampaignForm({...loanCampaignForm, name: e.target.value})}
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
                 />
               </div>
@@ -621,8 +622,8 @@ const RawLeads = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Description</label>
                 <input 
                   type="text" 
-                  value={campaignForm.description} 
-                  onChange={e => setCampaignForm({...campaignForm, description: e.target.value})}
+                  value={loanCampaignForm.description} 
+                  onChange={e => setLoanCampaignForm({...loanCampaignForm, description: e.target.value})}
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
                 />
               </div>
@@ -634,33 +635,33 @@ const RawLeads = () => {
                   <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '10px' }} />
                   <input
                     type="text"
-                    placeholder="Search sales employees..."
+                    placeholder="Search loan employees..."
                     value={assigneeSearchQ}
                     onChange={(e) => setAssigneeSearchQ(e.target.value)}
                     style={{ width: '100%', padding: '0.5rem 0.5rem 0.5rem 2rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
                   />
                 </div>
                 <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.5rem', background: 'var(--bg-secondary)' }}>
-                  {(!assigneeSearchQ || 'all sales employees'.includes(assigneeSearchQ.toLowerCase())) && (
+                  {(!assigneeSearchQ || 'all loan admins & employees'.includes(assigneeSearchQ.toLowerCase())) && (
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
                       <input 
                         type="checkbox" 
-                        checked={campaignForm.assigned_to.length === 0}
-                        onChange={() => setCampaignForm({...campaignForm, assigned_to: []})}
+                        checked={loanCampaignForm.assigned_to.length === 0}
+                        onChange={() => setLoanCampaignForm({...loanCampaignForm, assigned_to: []})}
                       />
-                      <span style={{ fontWeight: campaignForm.assigned_to.length === 0 ? '600' : '400' }}>All Sales Employees</span>
+                      <span style={{ fontWeight: loanCampaignForm.assigned_to.length === 0 ? '600' : '400' }}>All Loan Admins & Employees</span>
                     </label>
                   )}
-                  {users?.filter(u => u.role === 'sales' && (u.name || '').toLowerCase().includes(assigneeSearchQ.toLowerCase())).map(user => (
+                  {users?.filter(u => (u.role === 'loan_employee' || u.role === 'loan_admin') && (u.name || '').toLowerCase().includes(assigneeSearchQ.toLowerCase())).map(user => (
                     <label key={user.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
                       <input 
                         type="checkbox" 
-                        checked={campaignForm.assigned_to.includes(user.id)}
+                        checked={loanCampaignForm.assigned_to.includes(user.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setCampaignForm({...campaignForm, assigned_to: [...campaignForm.assigned_to, user.id]});
+                            setLoanCampaignForm({...loanCampaignForm, assigned_to: [...loanCampaignForm.assigned_to, user.id]});
                           } else {
-                            setCampaignForm({...campaignForm, assigned_to: campaignForm.assigned_to.filter(id => id !== user.id)});
+                            setLoanCampaignForm({...loanCampaignForm, assigned_to: loanCampaignForm.assigned_to.filter(id => id !== user.id)});
                           }
                         }}
                       />
@@ -683,4 +684,4 @@ const RawLeads = () => {
   );
 };
 
-export default RawLeads;
+export default LoanRawLeads;

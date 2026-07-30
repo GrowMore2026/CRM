@@ -15,6 +15,8 @@ import HolidayList from './pages/HolidayList';
 import Profile from './pages/Profile';
 import RawLeads from './pages/RawLeads';
 import CalledLeads from './pages/CalledLeads';
+import LoanRawLeads from './pages/LoanRawLeads';
+import LoanCalledLeads from './pages/LoanCalledLeads';
 import NotificationsPage from './pages/NotificationsPage';
 import Settings from './pages/Settings';
 
@@ -124,6 +126,16 @@ function App() {
           <Route path="loan-admin/users" element={
             <ProtectedRoute allowedRoles={['loan_admin']}>
               <ManageUsers roleFilter="loan_employee" readOnly={false} canManageUsers={true} allowedRolesToCreate={['loan_employee']} />
+            </ProtectedRoute>
+          } />
+          <Route path="loan-raw-leads" element={
+            <ProtectedRoute allowedRoles={['superadmin', 'loan_admin', 'loan_employee']}>
+              <LoanRawLeads />
+            </ProtectedRoute>
+          } />
+          <Route path="loan-called-leads" element={
+            <ProtectedRoute allowedRoles={['superadmin', 'loan_admin', 'loan_employee']}>
+              <LoanCalledLeads />
             </ProtectedRoute>
           } />
           <Route path="payment-history" element={

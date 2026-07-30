@@ -44,6 +44,8 @@ export const AppProvider = ({ children }) => {
   const [holidays, setHolidays] = useState([]);
   const [rawLeads, setRawLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
+  const [loanRawLeads, setLoanRawLeads] = useState([]);
+  const [loanCampaigns, setLoanCampaigns] = useState([]);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [loadError,   setLoadError]   = useState(null);
@@ -72,6 +74,7 @@ export const AppProvider = ({ children }) => {
         supabase.from('lead_lists').select('*'),
         supabase.from('holidays').select('*'),
         supabase.from('raw_lead_campaigns').select('*').order('created_at', { ascending: false }),
+        supabase.from('loan_campaigns').select('*').order('created_at', { ascending: false }),
       ];
 
       if (currentUserRef.current) {
@@ -81,13 +84,15 @@ export const AppProvider = ({ children }) => {
       }
 
       const results = await Promise.all(promises);
-      const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes, campaignsRes] = results;
-      const notifRes = currentUserRef.current ? results[7] : { data: [], error: null };
+      const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes, campaignsRes, loanCampaignsRes] = results;
+      const notifRes = currentUserRef.current ? results[8] : { data: [], error: null };
 
       // Fetch raw leads in two parts: all claimed leads + latest 1000 unclaimed leads
-      const [rawClaimedRes, rawUnclaimedRes] = await Promise.all([
-        supabase.from('raw_leads').select('*').not('claimed_by', 'is', null),
-        supabase.from('raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }).limit(1000)
+      const [rawClaimedRes, rawUnclaimedRes, loanRawClaimedRes, loanRawUnclaimedRes] = await Promise.all([
+        supabase.from('raw_leads').select('*').not('claimed_by', 'is', null).limit(50000),
+        supabase.from('raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }).limit(100000),
+        supabase.from('loan_raw_leads').select('*').not('claimed_by', 'is', null).limit(50000),
+        supabase.from('loan_raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }).limit(100000)
       ]);
       
       const rawLeadsData = [
@@ -95,7 +100,12 @@ export const AppProvider = ({ children }) => {
         ...(rawUnclaimedRes.data || [])
       ];
 
-      const errors = [usersRes.error, tasksRes.error, clientsRes.error, leadsRes.error, leadListsRes.error, holidaysRes.error, rawClaimedRes.error, rawUnclaimedRes.error];
+      const loanRawLeadsData = [
+        ...(loanRawClaimedRes.data || []),
+        ...(loanRawUnclaimedRes.data || [])
+      ];
+
+      const errors = [usersRes.error, tasksRes.error, clientsRes.error, leadsRes.error, leadListsRes.error, holidaysRes.error, rawClaimedRes.error, rawUnclaimedRes.error, loanCampaignsRes.error, loanRawClaimedRes.error, loanRawUnclaimedRes.error];
       if (notifRes.error && notifRes.error.code !== '42P01') {
         console.error('[supabase] notifications load error:', notifRes.error);
       }
@@ -117,7 +127,9 @@ export const AppProvider = ({ children }) => {
       setLeadLists(leadListsRes.data ?? []);
       setHolidays(holidaysRes.data ?? []);
       setRawLeads(rawLeadsData);
+      setLoanRawLeads(loanRawLeadsData);
       if (campaignsRes?.data) setCampaigns(campaignsRes.data);
+      if (loanCampaignsRes?.data) setLoanCampaigns(loanCampaignsRes.data);
       setNotifications(notifRes.data ?? []);
       setDataLoading(false);
     } catch (err) {
@@ -855,6 +867,75 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const addLoanRawLeads = async (leadsArray) => {
+    const { data, error } = await supabase.from('loan_raw_leads').insert(leadsArray).select();
+    if (error) throw error;
+    if (data?.length > 0) {
+      setLoanRawLeads(prev => [...data, ...prev]);
+    }
+    return data;
+  };
+
+  const claimNextLoanRawLead = async (userId) => {
+    let attempts = 0;
+    while(attempts < 3) {
+      const activeCampaigns = loanCampaigns.filter(c => 
+        c.is_active && 
+        (!c.assigned_to || c.assigned_to.split(',').includes(userId))
+      );
+      const activeCampaignIds = activeCampaigns.map(c => c.id);
+      
+      console.log('claimNextLoanRawLead userId:', userId);
+      console.log('loanCampaigns:', loanCampaigns);
+      console.log('activeCampaignIds:', activeCampaignIds);
+      
+      if (activeCampaignIds.length === 0) return null;
+
+      const { data: unassignedLeads, error: selectErr } = await supabase
+        .from('loan_raw_leads')
+        .select('id')
+        .is('claimed_by', null)
+        .in('campaign_id', activeCampaignIds)
+        .limit(5);
+        
+      console.log('unassignedLeads:', unassignedLeads, selectErr);
+        
+      if (!unassignedLeads || unassignedLeads.length === 0) return null;
+      
+      const targetId = unassignedLeads[0].id;
+      
+      const { data: claimed } = await supabase
+        .from('loan_raw_leads')
+        .update({ claimed_by: userId, claimed_at: new Date().toISOString(), status: 'PENDING' })
+        .eq('id', targetId)
+        .is('claimed_by', null)
+        .select();
+        
+      if (claimed && claimed.length > 0) {
+        setLoanRawLeads(prev => {
+          const exists = prev.some(l => l.id === targetId);
+          if (exists) return prev.map(l => l.id === targetId ? claimed[0] : l);
+          return [claimed[0], ...prev];
+        });
+        return claimed[0];
+      }
+      attempts++;
+    }
+    return null;
+  };
+
+  const submitLoanRawLeadStatus = async (leadId, status) => {
+    const { data, error } = await supabase
+      .from('loan_raw_leads')
+      .update({ status: status })
+      .eq('id', leadId)
+      .select();
+    if (error) throw error;
+    if (data && data.length > 0) {
+      setLoanRawLeads(prev => prev.map(l => l.id === leadId ? data[0] : l));
+    }
+  };
+
   const updateLeadDetails = (leadId, details) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, ...details } : l));
     
@@ -1054,6 +1135,30 @@ export const AppProvider = ({ children }) => {
         const { error } = await supabase.from('raw_lead_campaigns').delete().eq('id', id);
         if (error) throw error;
         setCampaigns(prev => prev.filter(c => c.id !== id));
+      },
+
+      loanRawLeads,
+      loanCampaigns,
+      addLoanRawLeads,
+      claimNextLoanRawLead,
+      submitLoanRawLeadStatus,
+      setLoanCampaigns,
+      addLoanCampaign: async (camp) => {
+        const { data, error } = await supabase.from('loan_campaigns').insert(camp).select();
+        if (error) throw error;
+        setLoanCampaigns(prev => [data[0], ...prev]);
+        return data[0];
+      },
+      updateLoanCampaign: async (id, updates) => {
+        const { data, error } = await supabase.from('loan_campaigns').update(updates).eq('id', id).select();
+        if (error) throw error;
+        setLoanCampaigns(prev => prev.map(c => c.id === id ? data[0] : c));
+        return data[0];
+      },
+      deleteLoanCampaign: async (id) => {
+        const { error } = await supabase.from('loan_campaigns').delete().eq('id', id);
+        if (error) throw error;
+        setLoanCampaigns(prev => prev.filter(c => c.id !== id));
       },
       addIncentive: async (inc) => {},
       selectedClient,

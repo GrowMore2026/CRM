@@ -131,15 +131,7 @@ const Layout = () => {
       { path: '/admin/completed', label: 'Completed Documents', icon: <HiOutlineClipboardDocumentCheck size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { 
-        path: '/raw-leads', 
-        label: 'Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
-        submenu: [
-          { path: '/raw-leads', label: 'Raw Leads' },
-          { path: '/called-leads', label: 'Called Leads' }
-        ]
-      },
+
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -160,6 +152,7 @@ const Layout = () => {
           { path: '/called-leads', label: 'Called Leads' }
         ]
       },
+
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -170,15 +163,6 @@ const Layout = () => {
       { path: '/payment-history', label: 'Payment History', icon: <HiOutlineWallet size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { 
-        path: '/raw-leads', 
-        label: 'Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
-        submenu: [
-          { path: '/raw-leads', label: 'Raw Leads' },
-          { path: '/called-leads', label: 'Called Leads' }
-        ]
-      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -187,15 +171,6 @@ const Layout = () => {
       { path: '/digital-marketing/leads', label: 'Marketing Leads', icon: <HiOutlineUsers size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { 
-        path: '/raw-leads', 
-        label: 'Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
-        submenu: [
-          { path: '/raw-leads', label: 'Raw Leads' },
-          { path: '/called-leads', label: 'Called Leads' }
-        ]
-      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -227,12 +202,12 @@ const Layout = () => {
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
       { 
-        path: '/raw-leads', 
-        label: 'Raw Leads', 
+        path: '/loan-raw-leads', 
+        label: 'Loan Raw Leads', 
         icon: <HiOutlineDocumentText size={24} />,
         submenu: [
-          { path: '/raw-leads', label: 'Raw Leads' },
-          { path: '/called-leads', label: 'Called Leads' }
+          { path: '/loan-raw-leads', label: 'Loan Raw Leads' },
+          { path: '/loan-called-leads', label: 'Called Leads' }
         ]
       },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
@@ -248,12 +223,12 @@ const Layout = () => {
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
       { 
-        path: '/raw-leads', 
-        label: 'Raw Leads', 
+        path: '/loan-raw-leads', 
+        label: 'Loan Raw Leads', 
         icon: <HiOutlineDocumentText size={24} />,
         submenu: [
-          { path: '/raw-leads', label: 'Raw Leads' },
-          { path: '/called-leads', label: 'Called Leads' }
+          { path: '/loan-raw-leads', label: 'Loan Raw Leads' },
+          { path: '/loan-called-leads', label: 'Called Leads' }
         ]
       },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
@@ -302,6 +277,15 @@ const Layout = () => {
         submenu: [
           { path: '/raw-leads', label: 'Raw Leads' },
           { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
+      { 
+        path: '/loan-raw-leads', 
+        label: 'Loan Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/loan-raw-leads', label: 'Loan Raw Leads' },
+          { path: '/loan-called-leads', label: 'Called Leads' }
         ]
       },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
