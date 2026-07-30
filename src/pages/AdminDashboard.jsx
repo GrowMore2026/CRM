@@ -17,11 +17,12 @@ import AddNewLoanFile from './AddNewLoanFile';
 
 // AdminOverview: stats pulled from ALL connected tables
 const AdminOverview = ({ readOnly }) => {
-  const { users, tasks, clients, currentUser, setSelectedClient, leads, leadLists } = useApp();
+  const { users, tasks, clients, currentUser, setSelectedClient, leads, leadLists, rawLeads } = useApp();
   const navigate = useNavigate();
   const [searchEmp, setSearchEmp] = useState('');
   const [animate, setAnimate] = useState(false);
   const [summaryMonth, setSummaryMonth] = useState(-1);
+  const [selectedRawLeadEmployee, setSelectedRawLeadEmployee] = useState('');
 
   const [loanFiles, setLoanFiles] = useState([]);
   const [loadingLoans, setLoadingLoans] = useState(false);
@@ -160,6 +161,28 @@ const AdminOverview = ({ readOnly }) => {
           <p style={{ margin: 0, color: payload[0].payload?.color || 'var(--accent-primary)', fontWeight: 700 }}>
             {payload[0].value} Clients
           </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const StackedBarTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '0.5rem', boxShadow: 'var(--shadow-sm)', minWidth: '150px' }}>
+          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>{label}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            {payload.filter(p => p.value > 0).map((entry, index) => (
+              <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                <span style={{ color: entry.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: entry.color, display: 'inline-block' }}></span>
+                  {entry.name}
+                </span>
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{entry.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -385,6 +408,68 @@ const AdminOverview = ({ readOnly }) => {
 
     return { totalLeads, totalLists, activeListsCount: activeLists.length, listSummary, leadPipelineData };
   }, [leads, leadLists, readOnly, users]);
+
+  // ── Raw Leads Metrics (Super Admin Only) ──
+  const rawLeadMetrics = useMemo(() => {
+    if (!readOnly || !rawLeads) return null;
+    
+    const totalRawLeads = rawLeads.length;
+    
+    // Status counts
+    const statusCounts = rawLeads.reduce((acc, curr) => {
+      const st = curr.status || 'PENDING';
+      if (st !== 'PENDING' && st !== 'UNASSIGNED') {
+         acc[st] = (acc[st] || 0) + 1;
+      }
+      return acc;
+    }, {});
+    
+    const rawLeadChartData = Object.keys(statusCounts).map(key => ({ name: key, count: statusCounts[key] })).sort((a, b) => b.count - a.count);
+
+    // Employee counts
+    const empDataMap = rawLeads.reduce((acc, curr) => {
+      if (curr.claimed_by) {
+        if (!acc[curr.claimed_by]) acc[curr.claimed_by] = { total: 0, statuses: {} };
+        acc[curr.claimed_by].total += 1;
+        
+        const st = curr.status || 'PENDING';
+        acc[curr.claimed_by].statuses[st] = (acc[curr.claimed_by].statuses[st] || 0) + 1;
+      }
+      return acc;
+    }, {});
+    
+    const employeeRawLeadsDataAll = Object.keys(empDataMap)
+      .map(id => {
+        const u = users.find(x => x.id === id);
+        const data = empDataMap[id];
+        return { 
+          id,
+          name: u ? u.name : 'Unknown', 
+          total: data.total,
+          Interested: data.statuses['Interested'] || 0,
+          'Call Back': data.statuses['Call Back'] || 0,
+          'Not Interested': data.statuses['Not Interested'] || 0,
+          'Wrong Number': data.statuses['Wrong Number'] || 0,
+          Invalid: data.statuses['Invalid'] || 0,
+          DND: data.statuses['DND'] || 0,
+          Busy: data.statuses['Busy'] || 0,
+          'Not Pickup': data.statuses['Not Pickup'] || 0,
+          PENDING: data.statuses['PENDING'] || 0,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+      
+    const employeeRawLeadsData = selectedRawLeadEmployee
+      ? employeeRawLeadsDataAll.filter(emp => emp.id === selectedRawLeadEmployee)
+      : employeeRawLeadsDataAll.slice(0, 5); // top 5 employees
+
+    const followupLeadsCount = rawLeads.filter(l => l.status === 'Call Back').length;
+    const pendingLeadsCount = rawLeads.filter(l => !l.status || l.status === 'PENDING').length;
+    const processedLeadsCount = rawLeads.filter(l => l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED').length;
+    const remainingLeadsCount = totalRawLeads - processedLeadsCount;
+
+    return { totalRawLeads, followupLeadsCount, pendingLeadsCount, remainingLeadsCount, rawLeadChartData, employeeRawLeadsData, employeeRawLeadsDataAll };
+  }, [rawLeads, readOnly, users, selectedRawLeadEmployee]);
 
   return (
     <div className="animate-fade-in" style={{ padding: '1rem' }}>
@@ -956,7 +1041,7 @@ const AdminOverview = ({ readOnly }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {dmMetrics.listSummary.map((list) => (
+                        {dmMetrics.listSummary.slice(0, 10).map((list) => (
                           <tr key={list.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                             <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontWeight: '600' }}>{list.name}</td>
                             <td style={{ padding: '0.75rem' }}>
@@ -994,6 +1079,111 @@ const AdminOverview = ({ readOnly }) => {
                             return <Cell key={`cell-${index}`} fill={fillColor} />;
                           })}
                         </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── Raw Leads Performance ── */}
+          {rawLeadMetrics && (
+            <>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: '3rem 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                Raw Leads Performance
+              </h2>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
+                    <TrendingUp size={28} />
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Total Raw Leads</p>
+                    <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>{rawLeadMetrics.totalRawLeads.toLocaleString()}</h3>
+                  </div>
+                </div>
+
+
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                    <TrendingUp size={28} />
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Remaining Leads</p>
+                    <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>{rawLeadMetrics.remainingLeadsCount.toLocaleString()}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                {/* Raw Lead Status Breakdown Chart */}
+                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Raw Lead Status Distribution</h3>
+                  <div style={{ width: '100%', height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={rawLeadMetrics.rawLeadChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border-color)" opacity={0.5} />
+                        <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} width={120} />
+                        <Tooltip cursor={{ fill: 'var(--bg-tertiary)' }} contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px' }} />
+                        <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]}>
+                          {rawLeadMetrics.rawLeadChartData.map((entry, index) => {
+                            let fillColor = '#94a3b8';
+                            if (entry.name === 'Interested') fillColor = '#10b981';
+                            else if (entry.name === 'Not Interested') fillColor = '#ef4444';
+                            else if (entry.name === 'Call Back') fillColor = '#3b82f6';
+                            else if (entry.name === 'Wrong Number') fillColor = '#f59e0b';
+                            else if (entry.name === 'Invalid') fillColor = '#6b7280';
+                            else if (entry.name === 'DND') fillColor = '#8b5cf6';
+                            else if (entry.name === 'Busy') fillColor = '#eab308';
+                            else if (entry.name === 'Not Pickup') fillColor = '#f43f5e';
+                            return <Cell key={`cell-${index}`} fill={fillColor} />;
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Employee-wise Raw Leads Chart */}
+                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+                      {selectedRawLeadEmployee ? 'Employee Raw Leads' : 'Top 5 Employees (Raw Leads)'}
+                    </h3>
+                    <select
+                      value={selectedRawLeadEmployee}
+                      onChange={(e) => setSelectedRawLeadEmployee(e.target.value)}
+                      style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.4rem 0.8rem', outline: 'none' }}
+                    >
+                      <option value="">Top 5 Employees</option>
+                      {rawLeadMetrics.employeeRawLeadsDataAll.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ width: '100%', height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={rawLeadMetrics.employeeRawLeadsData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                        <CartesianGrid vertical={false} stroke="var(--border-color)" strokeDasharray="3 3" />
+                        <Tooltip
+                          content={<StackedBarTooltip />}
+                          cursor={{ fill: 'var(--bg-tertiary)' }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                        <Bar dataKey="Interested" stackId="a" fill="#10b981" />
+                        <Bar dataKey="Call Back" stackId="a" fill="#3b82f6" />
+                        <Bar dataKey="Not Interested" stackId="a" fill="#ef4444" />
+                        <Bar dataKey="Wrong Number" stackId="a" fill="#f59e0b" />
+                        <Bar dataKey="Invalid" stackId="a" fill="#6b7280" />
+                        <Bar dataKey="DND" stackId="a" fill="#8b5cf6" />
+                        <Bar dataKey="Busy" stackId="a" fill="#eab308" />
+                        <Bar dataKey="Not Pickup" stackId="a" fill="#f43f5e" />
+                        <Bar dataKey="PENDING" stackId="a" fill="#94a3b8" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

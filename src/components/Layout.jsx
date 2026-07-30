@@ -99,6 +99,7 @@ const Layout = () => {
     if (p.includes('/settings')) return 'Settings';
     if (p.includes('/notifications')) return 'Notifications';
     if (p.includes('/raw-leads')) return 'Raw Leads';
+    if (p.includes('/called-leads')) return 'Called Leads';
     if (p.includes('/pipeline')) {
       const stage = new URLSearchParams(location.search).get('stage');
       if (stage) return stage;
@@ -130,7 +131,15 @@ const Layout = () => {
       { path: '/admin/completed', label: 'Completed Documents', icon: <HiOutlineClipboardDocumentCheck size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { path: '/raw-leads', label: 'Raw Leads', icon: <HiOutlineDocumentText size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -142,7 +151,15 @@ const Layout = () => {
       { path: '/payment-history', label: 'Payment History', icon: <HiOutlineWallet size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { path: '/raw-leads', label: 'Raw Leads', icon: <HiOutlineDocumentText size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -153,7 +170,15 @@ const Layout = () => {
       { path: '/payment-history', label: 'Payment History', icon: <HiOutlineWallet size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { path: '/raw-leads', label: 'Raw Leads', icon: <HiOutlineDocumentText size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -162,7 +187,15 @@ const Layout = () => {
       { path: '/digital-marketing/leads', label: 'Marketing Leads', icon: <HiOutlineUsers size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { path: '/raw-leads', label: 'Raw Leads', icon: <HiOutlineDocumentText size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -193,7 +226,15 @@ const Layout = () => {
       { path: '/loan-employee/rejected-files', label: 'Rejected Files', icon: <HiOutlineXCircle size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { path: '/raw-leads', label: 'Raw Leads', icon: <HiOutlineDocumentText size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -206,7 +247,15 @@ const Layout = () => {
       { path: '/loan-admin/users', label: 'Loan Employees', icon: <HiOutlineUsers size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
-      { path: '/raw-leads', label: 'Raw Leads', icon: <HiOutlineDocumentText size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ],
 
@@ -246,6 +295,15 @@ const Layout = () => {
       { path: '/superadmin/completed', label: 'Completed Documents', icon: <HiOutlineClipboardDocumentCheck size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },
       { path: '/holidays', label: 'Holiday List', icon: <HiOutlineCalendarDays size={24} /> },
+      { 
+        path: '/raw-leads', 
+        label: 'Raw Leads', 
+        icon: <HiOutlineDocumentText size={24} />,
+        submenu: [
+          { path: '/raw-leads', label: 'Raw Leads' },
+          { path: '/called-leads', label: 'Called Leads' }
+        ]
+      },
       { path: '/settings', label: 'Settings', icon: <HiOutlineCog6Tooth size={24} /> },
     ]
   };

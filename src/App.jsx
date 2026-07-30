@@ -14,6 +14,7 @@ import PaymentHistory from './pages/PaymentHistory';
 import HolidayList from './pages/HolidayList';
 import Profile from './pages/Profile';
 import RawLeads from './pages/RawLeads';
+import CalledLeads from './pages/CalledLeads';
 import NotificationsPage from './pages/NotificationsPage';
 import Settings from './pages/Settings';
 
@@ -132,6 +133,7 @@ function App() {
           } />
           <Route path="holidays" element={<HolidayList />} />
           <Route path="raw-leads" element={<RawLeads />} />
+          <Route path="called-leads" element={<CalledLeads />} />
           <Route path="profile" element={<Profile />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<Settings />} />

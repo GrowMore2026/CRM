@@ -130,7 +130,7 @@ const SalesLeadListCard = ({ list, leads, onViewLeads }) => {
 };
 
 const SalesOverview = () => {
-  const { clients, leads, currentUser , setSelectedClient } = useApp();
+  const { clients, leads, rawLeads, currentUser , setSelectedClient } = useApp();
   const navigate = useNavigate();
   
   const myClientsAll = clients.filter(c => c.createdBy === currentUser.id || c.closer === currentUser.id || (c.managedBy === currentUser.id && !c.closer));
@@ -245,14 +245,37 @@ const SalesOverview = () => {
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [leads, currentUser.id]);
 
+  const rawLeadsChartData = useMemo(() => {
+    const myRawLeads = (rawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED');
+    const statusCounts = {};
+    myRawLeads.forEach(l => {
+      statusCounts[l.status] = (statusCounts[l.status] || 0) + 1;
+    });
+    return Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [rawLeads, currentUser.id]);
+
+  const totalRawLeadsCalled = useMemo(() => {
+    return (rawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED').length;
+  }, [rawLeads, currentUser.id]);
+
   const LEAD_COLORS = {
-    'INTERESTED': '#10b981',
-    'NOT_INTERESTED': '#ef4444',
-    'CALLBACK': '#3b82f6',
-    'CONTACTED': '#f59e0b',
-    'DND': '#6b7280',
-    'CUT_CALL': '#6b7280',
-    'CREATED': '#94a3b8'
+    'CREATED': '#6366f1',
+    'CONTACTED': '#3b82f6',
+    'QUALIFIED': '#10b981',
+    'PROPOSAL': '#f59e0b',
+    'NEGOTIATION': '#8b5cf6',
+    'LOST': '#ef4444'
+  };
+
+  const RAW_LEAD_COLORS = {
+    'Interested': '#10b981',
+    'Call Back': '#3b82f6',
+    'Not Interested': '#ef4444',
+    'Wrong Number': '#f59e0b',
+    'Invalid': '#6b7280',
+    'DND': '#8b5cf6',
+    'Busy': '#eab308',
+    'Not Pickup': '#f43f5e'
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -271,6 +294,7 @@ const SalesOverview = () => {
 
   return (
     <div className="animate-fade-in" style={{ padding: '1rem' }}>
+
 
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px 300px', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -425,7 +449,7 @@ const SalesOverview = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr 1.5fr', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', marginBottom: '2rem' }}>
         {/* ── Holidays ── */}
         <div style={{ minWidth: 0 }}>
           <UpcomingHolidays />
@@ -457,7 +481,9 @@ const SalesOverview = () => {
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 250px', gap: '1.5rem', marginBottom: '2rem' }}>
         {/* ── Marketing Leads Chart ── */}
         <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -495,6 +521,45 @@ const SalesOverview = () => {
             </div>
           )}
         </div>
+
+        {/* ── Raw Leads Chart ── */}
+        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0' }}>Raw Leads Activity</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Distribution of raw leads you processed</p>
+            </div>
+          </div>
+          {rawLeadsChartData.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No processed raw leads found</div>
+          ) : (
+            <div style={{ width: '100%', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={rawLeadsChartData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {rawLeadsChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={RAW_LEAD_COLORS[entry.name] || '#94a3b8'} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', color: 'var(--text-primary)' }}
+                    itemStyle={{ color: 'var(--text-primary)' }}
+                  />
+                  <Legend verticalAlign="bottom" align="center" layout="horizontal" wrapperStyle={{ fontSize: '0.8rem', paddingTop: '10px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+        {statCard('Raw Leads Called', totalRawLeadsCalled, <Phone size={24} />, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
       </div>
     </div>
   );

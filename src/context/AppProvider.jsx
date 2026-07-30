@@ -43,6 +43,7 @@ export const AppProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [rawLeads, setRawLeads] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [loadError,   setLoadError]   = useState(null);
@@ -70,7 +71,7 @@ export const AppProvider = ({ children }) => {
         supabase.from('leads').select('*'),
         supabase.from('lead_lists').select('*'),
         supabase.from('holidays').select('*'),
-        supabase.from('raw_leads').select('*').order('created_at', { ascending: false }),
+        supabase.from('raw_lead_campaigns').select('*').order('created_at', { ascending: false }),
       ];
 
       if (currentUserRef.current) {
@@ -80,13 +81,21 @@ export const AppProvider = ({ children }) => {
       }
 
       const results = await Promise.all(promises);
-      const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes, rawLeadsRes] = results;
+      const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes, campaignsRes] = results;
       const notifRes = currentUserRef.current ? results[7] : { data: [], error: null };
 
-      const errors = [usersRes.error, tasksRes.error, clientsRes.error, leadsRes.error, leadListsRes.error, holidaysRes.error];
-      if (rawLeadsRes?.error && rawLeadsRes.error.code !== '42P01') {
-        errors.push(rawLeadsRes.error);
-      }
+      // Fetch raw leads in two parts: all claimed leads + latest 1000 unclaimed leads
+      const [rawClaimedRes, rawUnclaimedRes] = await Promise.all([
+        supabase.from('raw_leads').select('*').not('claimed_by', 'is', null),
+        supabase.from('raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }).limit(1000)
+      ]);
+      
+      const rawLeadsData = [
+        ...(rawClaimedRes.data || []),
+        ...(rawUnclaimedRes.data || [])
+      ];
+
+      const errors = [usersRes.error, tasksRes.error, clientsRes.error, leadsRes.error, leadListsRes.error, holidaysRes.error, rawClaimedRes.error, rawUnclaimedRes.error];
       if (notifRes.error && notifRes.error.code !== '42P01') {
         console.error('[supabase] notifications load error:', notifRes.error);
       }
@@ -107,7 +116,8 @@ export const AppProvider = ({ children }) => {
       setLeads(leadsRes.data ?? []);
       setLeadLists(leadListsRes.data ?? []);
       setHolidays(holidaysRes.data ?? []);
-      setRawLeads(rawLeadsRes?.data ?? []);
+      setRawLeads(rawLeadsData);
+      if (campaignsRes?.data) setCampaigns(campaignsRes.data);
       setNotifications(notifRes.data ?? []);
       setDataLoading(false);
     } catch (err) {
@@ -231,6 +241,18 @@ export const AppProvider = ({ children }) => {
           setNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new : n));
         } else if (payload.eventType === 'DELETE') {
           setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'raw_lead_campaigns' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setCampaigns(prev => {
+            if (prev.some(c => c.id === payload.new.id)) return prev;
+            return [payload.new, ...prev];
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          setCampaigns(prev => prev.map(c => c.id === payload.new.id ? payload.new : c));
+        } else if (payload.eventType === 'DELETE') {
+          setCampaigns(prev => prev.filter(c => c.id !== payload.old.id));
         }
       })
       .subscribe();
@@ -766,6 +788,73 @@ export const AppProvider = ({ children }) => {
     return data;
   };
 
+  const claimNextRawLead = async (userId) => {
+    let attempts = 0;
+    while(attempts < 3) {
+      const activeCampaigns = campaigns.filter(c => 
+        c.is_active && 
+        (!c.assigned_to || c.assigned_to.split(',').includes(userId))
+      );
+      const activeCampaignIds = activeCampaigns.map(c => c.id);
+      
+      console.log('claimNextRawLead attempt:', attempts, 'userId:', userId, 'activeCampaignIds:', activeCampaignIds);
+
+      if (activeCampaignIds.length === 0) return null;
+
+      const { data: unassignedLeads, error: selectErr } = await supabase
+        .from('raw_leads')
+        .select('id')
+        .is('claimed_by', null)
+        .in('campaign_id', activeCampaignIds)
+        .limit(5);
+        
+      console.log('unassignedLeads:', unassignedLeads, 'selectErr:', selectErr);
+        
+      if (!unassignedLeads || unassignedLeads.length === 0) {
+        return null;
+      }
+      
+      const targetId = unassignedLeads[0].id;
+      
+      const { data: claimed, error } = await supabase
+        .from('raw_leads')
+        .update({ claimed_by: userId, claimed_at: new Date().toISOString(), status: 'PENDING' })
+        .eq('id', targetId)
+        .is('claimed_by', null)
+        .select();
+        
+      console.log('claimed update result:', claimed, 'error:', error);
+        
+      if (claimed && claimed.length > 0) {
+        setRawLeads(prev => {
+          const exists = prev.some(l => l.id === targetId);
+          if (exists) return prev.map(l => l.id === targetId ? claimed[0] : l);
+          return [claimed[0], ...prev];
+        });
+        return claimed[0];
+      }
+      attempts++;
+    }
+    return null;
+  };
+
+  const submitRawLeadStatus = async (leadId, status) => {
+    const { data, error } = await supabase
+      .from('raw_leads')
+      .update({ status: status })
+      .eq('id', leadId)
+      .select();
+      
+    if (error) {
+      console.error('[supabase] submitRawLeadStatus error:', error);
+      throw error;
+    }
+    
+    if (data && data.length > 0) {
+      setRawLeads(prev => prev.map(l => l.id === leadId ? data[0] : l));
+    }
+  };
+
   const updateLeadDetails = (leadId, details) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, ...details } : l));
     
@@ -942,7 +1031,31 @@ export const AppProvider = ({ children }) => {
       addTask, updateTaskStatus,
       addClient, transferClient, registerPayment, updateClientStatus, updateClientStage, updateClientServiceStage, updateClientDetails, addLoanFile,
       addLead, updateLeadDetails, removeLead, convertLeadToClient, assignLeadListToSales, addLeadList, updateLeadList, removeLeadList, clearLeadList,
-      rawLeads, addRawLeads,
+      rawLeads,
+      campaigns,
+      addRawLeads,
+      claimNextRawLead,
+      submitRawLeadStatus,
+      setHolidays: (h) => setHolidays(h),
+      setCampaigns,
+      addCampaign: async (camp) => {
+        const { data, error } = await supabase.from('raw_lead_campaigns').insert(camp).select();
+        if (error) throw error;
+        setCampaigns(prev => [data[0], ...prev]);
+        return data[0];
+      },
+      updateCampaign: async (id, updates) => {
+        const { data, error } = await supabase.from('raw_lead_campaigns').update(updates).eq('id', id).select();
+        if (error) throw error;
+        setCampaigns(prev => prev.map(c => c.id === id ? data[0] : c));
+        return data[0];
+      },
+      deleteCampaign: async (id) => {
+        const { error } = await supabase.from('raw_lead_campaigns').delete().eq('id', id);
+        if (error) throw error;
+        setCampaigns(prev => prev.filter(c => c.id !== id));
+      },
+      addIncentive: async (inc) => {},
       selectedClient,
       setSelectedClient, removeClient, assignClientToAdmin,
       markIncentivesPaid, markNotificationRead, markAllNotificationsRead, deleteNotification,
