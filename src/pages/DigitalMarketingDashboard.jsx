@@ -291,7 +291,7 @@ const LeadListCard = ({ list, leads, users, onUploadCsv, onViewLeads, onDeleteLe
   const isActive = list.is_active !== false;
 
   return (
-    <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: 'var(--shadow-sm)' }}>
+    <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: 'var(--shadow-sm)' }}>
       
       {/* Top Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -600,7 +600,7 @@ const DigitalMarketingLeads = () => {
   const displayLists = leadLists.filter(l => 
     (l.name || '').toLowerCase().includes(searchQ.toLowerCase()) || 
     (l.description || '').toLowerCase().includes(searchQ.toLowerCase())
-  );
+  ).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
   return (
     <>
@@ -621,7 +621,7 @@ const DigitalMarketingLeads = () => {
         />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
         {displayLists.map(list => (
           <LeadListCard 
             key={list.id} 

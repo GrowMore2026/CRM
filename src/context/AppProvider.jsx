@@ -60,6 +60,26 @@ export const AppProvider = ({ children }) => {
     currentUserRef.current = currentUser;
   }, [currentUser]);
 
+  // Helper to fetch beyond Supabase's 1000 row max-rows limit for simple tables
+  const fetchAll = async (table) => {
+    return fetchAllQuery(supabase.from(table).select('*'));
+  };
+
+  // Helper to fetch beyond max-rows for complex queries
+  const fetchAllQuery = async (queryBuilder) => {
+    let allData = [];
+    let from = 0;
+    while (true) {
+      // Supabase range is inclusive, so from 0 to 999 fetches 1000 rows
+      const { data, error } = await queryBuilder.range(from, from + 999);
+      if (error) return { data: allData, error };
+      if (data) allData = allData.concat(data);
+      if (!data || data.length < 1000) break;
+      from += 1000;
+    }
+    return { data: allData, error: null };
+  };
+
   // ── Load all tables ────────────────────────────────────────
   const loadData = useCallback(async () => {
     setDataLoading(true);
@@ -69,8 +89,8 @@ export const AppProvider = ({ children }) => {
       const promises = [
         supabase.from('users').select('*'),
         supabase.from('tasks').select('*'),
-        supabase.from(CLIENTS_TABLE).select('*'),
-        supabase.from('leads').select('*'),
+        fetchAll(CLIENTS_TABLE),
+        fetchAll('leads'),
         supabase.from('lead_lists').select('*'),
         supabase.from('holidays').select('*'),
         supabase.from('raw_lead_campaigns').select('*').order('created_at', { ascending: false }),
@@ -87,12 +107,12 @@ export const AppProvider = ({ children }) => {
       const [usersRes, tasksRes, clientsRes, leadsRes, leadListsRes, holidaysRes, campaignsRes, loanCampaignsRes] = results;
       const notifRes = currentUserRef.current ? results[8] : { data: [], error: null };
 
-      // Fetch raw leads in two parts: all claimed leads + latest 1000 unclaimed leads
+      // Fetch raw leads in two parts: all claimed leads + all unclaimed leads
       const [rawClaimedRes, rawUnclaimedRes, loanRawClaimedRes, loanRawUnclaimedRes] = await Promise.all([
-        supabase.from('raw_leads').select('*').not('claimed_by', 'is', null).limit(50000),
-        supabase.from('raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }).limit(100000),
-        supabase.from('loan_raw_leads').select('*').not('claimed_by', 'is', null).limit(50000),
-        supabase.from('loan_raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }).limit(100000)
+        fetchAllQuery(supabase.from('raw_leads').select('*').not('claimed_by', 'is', null)),
+        fetchAllQuery(supabase.from('raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false })),
+        fetchAllQuery(supabase.from('loan_raw_leads').select('*').not('claimed_by', 'is', null)),
+        fetchAllQuery(supabase.from('loan_raw_leads').select('*').is('claimed_by', null).order('created_at', { ascending: false }))
       ]);
       
       const rawLeadsData = [
