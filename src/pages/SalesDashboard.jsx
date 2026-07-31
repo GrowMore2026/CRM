@@ -1153,12 +1153,15 @@ const MyClients = ({ isLeads = false }) => {
                     <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'block' }}>Status</label>
                     <select className="form-control" style={{ fontSize: '0.9rem', padding: '0.5rem' }} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
                       <option value="CREATED">CREATED</option>
-                      <option value="CONTACTED">CONTACTED</option>
-                      <option value="INTERESTED">INTERESTED</option>
-                      <option value="CALLBACK">CALL BACK LATER</option>
-                      <option value="NOT_INTERESTED">NOT INTERESTED</option>
+                      <option value="NOT_PICK_UP">not pick up</option>
+                      <option value="INTRO">intro</option>
+                      <option value="CALLBACK">call back</option>
+                      <option value="INTERESTED">intretsed</option>
+                      <option value="NOT_INTERESTED">not intrested</option>
+                      <option value="LANGUAGE_ISSUE">language issue</option>
+                      <option value="CONNECTIVITY_ISSUE">connectivity issue</option>
                       <option value="DND">DND</option>
-                      <option value="CUT_CALL">CUT Call</option>
+                      <option value="VOICE_MAIL">Voice Mail</option>
                     </select>
                   </div>
                 </div>

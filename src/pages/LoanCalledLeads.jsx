@@ -39,11 +39,15 @@ const LoanCalledLeads = () => {
           style={{ padding: '0.75rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', minWidth: '150px' }}
         >
           <option value="">All Statuses</option>
-          <option value="Interested">Interested</option>
-          <option value="Call Back">Call Back</option>
-          <option value="Not Interested">Not Interested</option>
-          <option value="Wrong Number">Wrong Number</option>
-          <option value="Invalid">Invalid Details</option>
+          <option value="not pick up">not pick up</option>
+          <option value="intro">intro</option>
+          <option value="call back">call back</option>
+          <option value="intretsed">intretsed</option>
+          <option value="not intrested">not intrested</option>
+          <option value="language issue">language issue</option>
+          <option value="connectivity issue">connectivity issue</option>
+          <option value="DND">DND</option>
+          <option value="Voice Mail">Voice Mail</option>
         </select>
 
         {!isEmployee && (

@@ -55,7 +55,7 @@ const LoanRawLeads = () => {
     if (!leadStatus) return showModal("Please select a status first.", 'error');
     setIsProcessing(true);
     try {
-      if (leadStatus === 'Interested' || leadStatus === 'Call Back') {
+      if (leadStatus === 'intretsed' || leadStatus === 'call back') {
         // Convert to real lead
         await addLead({
           name: activeLead.director_name || activeLead.company_name || 'Unknown',
@@ -319,14 +319,15 @@ const LoanRawLeads = () => {
                 style={{ width: '100%', padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '1.5rem' }}
               >
                 <option value="">Select an outcome...</option>
-                <option value="Interested">Interested (Convert to Lead)</option>
-                <option value="Call Back">Call Back (Convert to Lead)</option>
-                <option value="Not Interested">Not Interested</option>
-                <option value="DND">DND (Do Not Disturb)</option>
-                <option value="Busy">Busy</option>
-                <option value="Not Pickup">Not Pickup (NP)</option>
-                <option value="Wrong Number">Wrong Number</option>
-                <option value="Invalid">Invalid Details</option>
+                <option value="not pick up">not pick up</option>
+                <option value="intro">intro</option>
+                <option value="call back">call back</option>
+                <option value="intretsed">intretsed</option>
+                <option value="not intrested">not intrested</option>
+                <option value="language issue">language issue</option>
+                <option value="connectivity issue">connectivity issue</option>
+                <option value="DND">DND</option>
+                <option value="Voice Mail">Voice Mail</option>
               </select>
               
               <button 
