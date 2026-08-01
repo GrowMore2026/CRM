@@ -208,7 +208,7 @@ const LoanClients = ({ filterStatus }) => {
     const headers = [
       'Lead Source', 'Status', 'Full Name', 'Mobile Number', 'Alt Mobile', 'City', 'Loan Type', 
       'Loan Purpose', 'PAN', 'Age', 'Employment Type', 'Occupation', 'Employer', 
-      'Monthly Income', 'Property Value', 'Loan Amount', 'Down Payment', 'Total EMI', 'Created Date'
+      'Monthly Income', 'Property Value', 'Loan Amount', 'Down Payment', 'Total EMI', 'Created Date', 'Sales Rep'
     ];
 
     const escapeCsv = (str) => {
@@ -239,7 +239,8 @@ const LoanClients = ({ filterStatus }) => {
         escapeCsv(loan.loanAmount),
         escapeCsv(loan.downPayment),
         escapeCsv(loan.totalEmi),
-        escapeCsv(getFormatDate(loan.createdAt))
+        escapeCsv(getFormatDate(loan.createdAt)),
+        escapeCsv(loan.createdBy ? getSalesUserName(loan.createdBy) : 'Unassigned')
       ];
       csvRows.push(row.join(','));
     }
