@@ -372,6 +372,7 @@ const LoanClients = ({ filterStatus }) => {
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Phone</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>City</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Service</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Loan Amount</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Sales Rep</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Date</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Actions</th>
@@ -388,6 +389,7 @@ const LoanClients = ({ filterStatus }) => {
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.mobileNumber || '-'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.city || '-'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.typeOfLoan || '-'}</td>
+                  <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.loanAmount ? `₹${Number(loan.loanAmount).toLocaleString('en-IN')}` : '-'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)', fontSize: '0.8rem' }}>{loan.createdBy ? getSalesUserName(loan.createdBy) : 'Unassigned'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{getFormatDate(loan.createdAt)}</td>
                   <td style={{ padding: '1rem' }}>
