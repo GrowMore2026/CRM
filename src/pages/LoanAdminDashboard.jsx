@@ -207,7 +207,7 @@ const LoanAdminOverview = ({ hideHolidays }) => {
           <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Recent Applications</h3>
-              <Link to="/loan-admin/clients" style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>View All →</Link>
+              <Link to={currentUser.role === 'superadmin' ? '/superadmin/loan-clients' : '/loan-admin/clients'} style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>View All →</Link>
             </div>
             
             <div style={{ overflowX: 'auto' }}>

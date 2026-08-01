@@ -455,6 +455,9 @@ const DigitalMarketingLeads = () => {
     if (file && file.name.endsWith('.csv') && uploadListId) {
       try {
         const parsedData = await parseCSV(file);
+        const existingLead = leads.find(l => l.list_id === uploadListId && l.managedBy);
+        const ownerId = existingLead ? existingLead.managedBy : null;
+
         for (const row of parsedData) {
           const rowKeys = Object.keys(row);
           const nameKey = rowKeys.find(k => k.toLowerCase().includes('name')) || rowKeys[0];
@@ -474,7 +477,8 @@ const DigitalMarketingLeads = () => {
             city: cityKey ? row[cityKey] : '',
             state: stateKey ? row[stateKey] : '',
             status: 'CREATED',
-            dynamic_data: row
+            dynamic_data: row,
+            managedBy: ownerId
           };
           if (leadData.name || leadData.phone || leadData.email) {
             await addLead(leadData);
@@ -858,10 +862,13 @@ const DigitalMarketingLeadListView = () => {
   const handleAddSubmit = (e) => {
     e.preventDefault();
     if (!formData.name) return;
+    const existingLead = listLeads.find(l => l.managedBy);
+    const ownerId = existingLead ? existingLead.managedBy : null;
+    
     addLead({
       name: formData.name, email: formData.email, phone: formData.phone,
       type_of_service: formData.type_of_service, city: formData.city, state: formData.state,
-      source: 'Manual Entry', list_id: listId
+      source: 'Manual Entry', list_id: listId, managedBy: ownerId
     });
     setShowAddModal(false);
     setFormData({ name: '', email: '', phone: '', type_of_service: '', city: '', state: '' });
