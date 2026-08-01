@@ -58,6 +58,11 @@ function App() {
               <AdminDashboard readOnly={true} canManageUsers={true} />
             </ProtectedRoute>
           } />
+          <Route path="superadmin/loan-dashboard/*" element={
+            <ProtectedRoute allowedRoles={['superadmin']}>
+              <LoanAdminDashboard hideHolidays={true} />
+            </ProtectedRoute>
+          } />
           <Route path="superadmin/loan-clients" element={
             <ProtectedRoute allowedRoles={['superadmin']}>
               <LoanClients />

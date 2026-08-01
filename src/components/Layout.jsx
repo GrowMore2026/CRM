@@ -19,7 +19,9 @@ import {
   HiOutlineBell,
   HiOutlineMegaphone,
   HiOutlineIdentification,
-  HiOutlineCog6Tooth
+  HiOutlineCog6Tooth,
+  HiOutlineInboxStack,
+  HiOutlineBanknotes
 } from "react-icons/hi2";
 
 const Layout = () => {
@@ -146,7 +148,7 @@ const Layout = () => {
       { 
         path: '/raw-leads', 
         label: 'Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
+        icon: <HiOutlineInboxStack size={24} />,
         submenu: [
           { path: '/raw-leads', label: 'Raw Leads' },
           { path: '/called-leads', label: 'Called Leads' }
@@ -204,7 +206,7 @@ const Layout = () => {
       { 
         path: '/loan-raw-leads', 
         label: 'Loan Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
+        icon: <HiOutlineBanknotes size={24} />,
         submenu: [
           { path: '/loan-raw-leads', label: 'Loan Raw Leads' },
           { path: '/loan-called-leads', label: 'Called Leads' }
@@ -225,7 +227,7 @@ const Layout = () => {
       { 
         path: '/loan-raw-leads', 
         label: 'Loan Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
+        icon: <HiOutlineBanknotes size={24} />,
         submenu: [
           { path: '/loan-raw-leads', label: 'Loan Raw Leads' },
           { path: '/loan-called-leads', label: 'Called Leads' }
@@ -237,10 +239,11 @@ const Layout = () => {
     superadmin: [
       { path: '/superadmin', label: 'Dashboard', icon: <HiOutlineSquares2X2 size={24} /> },
       { 
-        path: '/superadmin/loan-clients', 
+        path: '/superadmin/loan-dashboard', 
         label: 'Loan', 
         icon: <HiOutlineDocumentText size={24} />,
         submenu: [
+          { path: '/superadmin/loan-dashboard', label: 'Loan Dashboard' },
           { path: '/superadmin/loan-clients', label: 'Clients' },
           { path: '/superadmin/loan-approved-files', label: 'Approved Files' },
           { path: '/superadmin/loan-rejected-files', label: 'Rejected Files' },
@@ -273,7 +276,7 @@ const Layout = () => {
       { 
         path: '/raw-leads', 
         label: 'Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
+        icon: <HiOutlineInboxStack size={24} />,
         submenu: [
           { path: '/raw-leads', label: 'Raw Leads' },
           { path: '/called-leads', label: 'Called Leads' }
@@ -282,7 +285,7 @@ const Layout = () => {
       { 
         path: '/loan-raw-leads', 
         label: 'Loan Raw Leads', 
-        icon: <HiOutlineDocumentText size={24} />,
+        icon: <HiOutlineBanknotes size={24} />,
         submenu: [
           { path: '/loan-raw-leads', label: 'Loan Raw Leads' },
           { path: '/loan-called-leads', label: 'Called Leads' }

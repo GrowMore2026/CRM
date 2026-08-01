@@ -7,7 +7,7 @@ import { FileText, Users, XCircle, Clock, CheckCircle } from 'lucide-react';
 import AddNewLoanFile from './AddNewLoanFile';
 import UpcomingHolidays from '../components/UpcomingHolidays';
 
-const LoanAdminOverview = () => {
+const LoanAdminOverview = ({ hideHolidays }) => {
   const { currentUser, users, dataLoading } = useApp();
   const [loanFiles, setLoanFiles] = useState([]);
   const [loadingLoans, setLoadingLoans] = useState(true);
@@ -69,6 +69,8 @@ const LoanAdminOverview = () => {
       count: loanFiles.filter(l => l.createdBy === emp.id).length
     };
   }).sort((a, b) => b.count - a.count);
+
+  const topPerformers = workload.slice(0, 5);
 
   if (dataLoading || loadingLoans) {
     return (
@@ -135,7 +137,7 @@ const LoanAdminOverview = () => {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
           <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Loan Status Breakdown</h3>
           <div style={{ height: '300px' }}>
@@ -157,6 +159,28 @@ const LoanAdminOverview = () => {
           </div>
         </div>
 
+        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Top 5 Performers</h3>
+          <div style={{ height: '300px' }}>
+            {topPerformers.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topPerformers} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.3} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                  <RechartsTooltip cursor={{ fill: 'var(--bg-tertiary)' }} contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px' }} />
+                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>No data available</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Loan Types Row */}
+      <div style={{ marginBottom: '2rem' }}>
         <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
           <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Loan Types</h3>
           <div style={{ height: '300px' }}>
@@ -218,9 +242,11 @@ const LoanAdminOverview = () => {
             </div>
           </div>
           
-          <div style={{ flex: 1 }}>
-            <UpcomingHolidays />
-          </div>
+          {!hideHolidays && (
+            <div style={{ flex: 1 }}>
+              <UpcomingHolidays />
+            </div>
+          )}
         </div>
 
         <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', height: 'fit-content' }}>
@@ -250,9 +276,9 @@ const LoanAdminOverview = () => {
   );
 };
 
-const LoanAdminDashboard = () => (
+const LoanAdminDashboard = ({ hideHolidays }) => (
   <Routes>
-    <Route path="/" element={<LoanAdminOverview />} />
+    <Route path="/" element={<LoanAdminOverview hideHolidays={hideHolidays} />} />
     <Route path="/add-loan-file" element={<AddNewLoanFile buttonOverride="Register Loan File" successMessageOverride="Loan File Created Successfully!" />} />
   </Routes>
 );
