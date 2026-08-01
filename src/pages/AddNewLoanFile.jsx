@@ -23,6 +23,7 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
     typeOfLoan: 'Business Loan',
     // Basic Details
     fullName: '', age: '', mobileNumber: '', alternateMobile: '', city: '', occupation: '', employmentType: 'Salaried', panCardNumber: '',
+    loginDate: '', chequeHandoverDate: '',
     // Loan Requirement
     loanPurpose: '', propertyType: '', propertyLocation: '', propertyValue: '', loanAmount: '', downPayment: '',
     // Employment & Income
@@ -95,6 +96,8 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
       annualIncome: formData.annualIncome ? parseFloat(formData.annualIncome) : null,
       creditCardDues: formData.creditCardDues ? parseFloat(formData.creditCardDues) : null,
       totalEmi: formData.totalEmi ? parseFloat(formData.totalEmi) : null,
+      loginDate: formData.loginDate || null,
+      chequeHandoverDate: formData.chequeHandoverDate || null,
     };
     
     const result = await addLoanFile(payload);
@@ -243,6 +246,18 @@ const AddNewLoanFile = ({ titleOverride, buttonOverride, successMessageOverride 
                 <div className="form-group">
                   <label className="form-label">Age</label>
                   <input type="number" name="age" className="form-control" placeholder="e.g. 35" value={formData.age} onChange={handleChange} />
+                </div>
+              </div>
+
+              {/* Row 2.5: Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="form-group">
+                  <label className="form-label">Login Date</label>
+                  <input type="date" name="loginDate" className="form-control" value={formData.loginDate} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Cheque Handover Date</label>
+                  <input type="date" name="chequeHandoverDate" className="form-control" value={formData.chequeHandoverDate} onChange={handleChange} />
                 </div>
               </div>
 
