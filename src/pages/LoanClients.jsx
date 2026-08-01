@@ -208,7 +208,7 @@ const LoanClients = ({ filterStatus }) => {
     const headers = [
       'Lead Source', 'Status', 'Full Name', 'Mobile Number', 'Alt Mobile', 'City', 'Loan Type', 
       'Loan Purpose', 'PAN', 'Age', 'Employment Type', 'Occupation', 'Employer', 
-      'Monthly Income', 'Property Value', 'Loan Amount', 'Down Payment', 'Total EMI', 'Created Date', 'Sales Rep'
+      'Monthly Income', 'Property Value', 'Loan Amount', 'Down Payment', 'Total EMI', 'Created Date', 'Sales Rep', 'Login Date', 'Cheque Handover Date'
     ];
 
     const escapeCsv = (str) => {
@@ -240,7 +240,9 @@ const LoanClients = ({ filterStatus }) => {
         escapeCsv(loan.downPayment),
         escapeCsv(loan.totalEmi),
         escapeCsv(getFormatDate(loan.createdAt)),
-        escapeCsv(loan.createdBy ? getSalesUserName(loan.createdBy) : 'Unassigned')
+        escapeCsv(loan.createdBy ? getSalesUserName(loan.createdBy) : 'Unassigned'),
+        escapeCsv(loan.loginDate ? getFormatDate(loan.loginDate) : '-'),
+        escapeCsv(loan.chequeHandoverDate ? getFormatDate(loan.chequeHandoverDate) : '-')
       ];
       csvRows.push(row.join(','));
     }
@@ -375,6 +377,8 @@ const LoanClients = ({ filterStatus }) => {
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Service</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Loan Amount</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Sales Rep</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Login Date</th>
+                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Cheque Handover</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Date</th>
                 <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Actions</th>
               </tr>
@@ -392,6 +396,8 @@ const LoanClients = ({ filterStatus }) => {
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.typeOfLoan || '-'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.loanAmount ? `₹${Number(loan.loanAmount).toLocaleString('en-IN')}` : '-'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)', fontSize: '0.8rem' }}>{loan.createdBy ? getSalesUserName(loan.createdBy) : 'Unassigned'}</td>
+                  <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.loginDate ? getFormatDate(loan.loginDate) : '-'}</td>
+                  <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{loan.chequeHandoverDate ? getFormatDate(loan.chequeHandoverDate) : '-'}</td>
                   <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{getFormatDate(loan.createdAt)}</td>
                   <td style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
