@@ -48,7 +48,21 @@ const LoanAdminOverview = ({ hideHolidays }) => {
   }, {});
 
   const statusData = Object.keys(statusCounts).map(key => ({ name: key, value: statusCounts[key] }));
-  const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#6366f1'];
+  
+  const STATUS_COLORS = {
+    'Pending': '#f59e0b', // orange
+    'Sanction': '#3b82f6', // blue
+    'Cheque Handover': '#10b981', // green
+    'Rejected': '#ef4444', // red
+    'Documentation': '#0ea5e9',
+    'Disbursement': '#8b5cf6',
+    'Query': '#f97316',
+    'Query Solve': '#14b8a6',
+    'Login Process': '#ec4899',
+    'Login With Technical Legal': '#6366f1',
+    'CREATED': '#94a3b8'
+  };
 
   // Chart 2: Loan Types Bar Chart
   const typeCounts = loanFiles.reduce((acc, curr) => {
@@ -146,7 +160,7 @@ const LoanAdminOverview = ({ hideHolidays }) => {
                 <PieChart>
                   <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={5} dataKey="value" nameKey="name">
                     {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <RechartsTooltip contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px' }} />
