@@ -1362,7 +1362,7 @@ const UserEditModal = ({ user, onSave, onCancel }) => {
 // ── ManageUsers ───────────────────────────────────────────────────────────────
 export const ManageUsers = ({ roleFilter, readOnly, canManageUsers, allowedRolesToCreate }) => {
   const { users, addUser, updateUser, removeUser, currentUser, setSelectedClient } = useApp();
-  const [formData, setFormData] = useState({ id: '', name: '', password: '', role: allowedRolesToCreate ? allowedRolesToCreate[0] : 'sales' });
+  const [formData, setFormData] = useState({ id: '', name: '', password: '', role: allowedRolesToCreate ? allowedRolesToCreate[0] : 'sales', email: '', phone: '', birthdate: '', createdAt: new Date().toISOString().substring(0, 10) });
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [editPwdId, setEditPwdId] = useState(null);
   const [editPwdVal, setEditPwdVal] = useState('');
@@ -1419,7 +1419,7 @@ export const ManageUsers = ({ roleFilter, readOnly, canManageUsers, allowedRoles
     e.preventDefault();
     if (addUser(formData)) {
       setMsg({ type: 'success', text: '✓ User created successfully!' });
-      setFormData({ id: '', name: '', password: '', role: allowedRolesToCreate ? allowedRolesToCreate[0] : 'sales' });
+      setFormData({ id: '', name: '', password: '', role: allowedRolesToCreate ? allowedRolesToCreate[0] : 'sales', email: '', phone: '', birthdate: '', createdAt: new Date().toISOString().substring(0, 10) });
     } else {
       setMsg({ type: 'error', text: '✕ User ID already exists!' });
     }
@@ -1579,6 +1579,22 @@ export const ManageUsers = ({ roleFilter, readOnly, canManageUsers, allowedRoles
                       {(!allowedRolesToCreate || allowedRolesToCreate.includes('loan_employee')) && <option value="loan_employee">Loan Employee</option>}
                       {(!allowedRolesToCreate || allowedRolesToCreate.includes('loan_admin')) && <option value="loan_admin">Loan Admin</option>}
                     </select>
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Email</label>
+                    <input type="email" className="form-control" placeholder="user@example.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} style={{ padding: '0.55rem 0.75rem', fontSize: '0.9rem' }} />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Phone Number</label>
+                    <input type="tel" className="form-control" placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} style={{ padding: '0.55rem 0.75rem', fontSize: '0.9rem' }} />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Joining Date</label>
+                    <input type="date" className="form-control" value={formData.createdAt} onChange={e => setFormData({ ...formData, createdAt: e.target.value })} style={{ padding: '0.55rem 0.75rem', fontSize: '0.9rem' }} />
+                  </div>
+                  <div className="form-group mb-0">
+                    <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Birthdate</label>
+                    <input type="date" className="form-control" value={formData.birthdate} onChange={e => setFormData({ ...formData, birthdate: e.target.value })} style={{ padding: '0.55rem 0.75rem', fontSize: '0.9rem' }} />
                   </div>
                 </div>
                 <button type="submit" className="btn btn-primary w-full mt-auto" style={{ padding: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Create User</button>
