@@ -587,6 +587,7 @@ const MyClients = ({ isLeads = false }) => {
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', company: '', service: [], budget: '', interested: true, note: '', collectedPayment: '', totalDeal: '', panNumber: '', gstNumber: '', payments: [], status: 'CREATED', notes: '' });
   const [editingClient, setEditingClient] = useState(null);
   const [searchQ, setSearchQ] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
   const startEdit = (c) => {
@@ -808,8 +809,19 @@ const MyClients = ({ isLeads = false }) => {
     const collected = Number(c.paymentAmount) || 0;
     const remaining = total - collected;
     
+    if (activeTab === 'today') {
+      const createdStr = getClientCreationDate(c);
+      if (!createdStr) return false;
+      const created = new Date(createdStr);
+      const today = new Date();
+      return created.getDate() === today.getDate() &&
+             created.getMonth() === today.getMonth() &&
+             created.getFullYear() === today.getFullYear();
+    }
     if (activeTab === 'new') {
-      const created = getClientCreationDate(c);
+      const createdStr = getClientCreationDate(c);
+      if (!createdStr) return false;
+      const created = new Date(createdStr);
       const diffTime = Math.abs(new Date() - created);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays <= 7;
@@ -820,8 +832,12 @@ const MyClients = ({ isLeads = false }) => {
     return true;
   });
 
-  const displayClients = searchQ.trim()
-    ? filteredByTab.filter(c => {
+  let displayClients = filteredByTab;
+  if (statusFilter) {
+    displayClients = displayClients.filter(c => (c.status || 'CREATED') === statusFilter);
+  }
+  if (searchQ.trim()) {
+    displayClients = displayClients.filter(c => {
       const q = searchQ.toLowerCase();
       return (
         (c.name || '').toLowerCase().includes(q) ||
@@ -829,8 +845,8 @@ const MyClients = ({ isLeads = false }) => {
         (c.phone || '').toLowerCase().includes(q) ||
         (getClientCompanyName(c) || '').toLowerCase().includes(q)
       );
-    })
-    : filteredByTab;
+    });
+  }
 
   return (
     <div className="animate-fade-in">
@@ -927,19 +943,52 @@ const MyClients = ({ isLeads = false }) => {
           {/* Removed CSV import options as requested */}
         </div>
         
-        <SearchBar 
-          value={searchQ} 
-          onChange={e => setSearchQ(e.target.value)} 
-          placeholder="Search by name, email, phone, company…"
-        />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', width: '100%', maxWidth: '600px', justifyContent: 'flex-end' }}>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            style={{ padding: '0.6rem 1rem', borderRadius: '9999px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', flexShrink: 0 }}
+          >
+            <option value="">All Statuses</option>
+            {isLeads ? (
+              <>
+                <option value="CREATED">Created</option>
+                <option value="INTRO">Intro</option>
+                <option value="INTERESTED">Interested</option>
+                <option value="NOT_INTERESTED">Not Interested</option>
+                <option value="CALLBACK">Callback</option>
+                <option value="CONTACTED">Contacted</option>
+                <option value="NOT_PICK_UP">Not Pick Up</option>
+                <option value="CUT_CALL">Cut Call</option>
+                <option value="DND">DND</option>
+                <option value="Voice Mail">Voice Mail</option>
+              </>
+            ) : (
+              <>
+                <option value="CREATED">Created</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+              </>
+            )}
+          </select>
+          <div style={{ flex: 1 }}>
+            <SearchBar 
+              value={searchQ} 
+              onChange={e => setSearchQ(e.target.value)} 
+              placeholder="Search by name, email, phone, company…"
+            />
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.4rem', WebkitOverflowScrolling: 'touch' }}>
         {(isLeads ? [
           { id: 'all', label: 'All Leads' },
+          { id: 'today', label: 'Today Leads' },
           { id: 'new', label: 'New Leads (7 Days)' }
         ] : [
           { id: 'all', label: 'All Clients' },
+          { id: 'today', label: 'Today Clients' },
           { id: 'new', label: 'New Clients (7 Days)' },
           { id: 'paid', label: 'Fully Paid' },
           { id: 'remaining', label: 'Remaining Payment' }
