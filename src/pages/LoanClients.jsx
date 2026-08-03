@@ -28,7 +28,7 @@ const LoanClients = ({ filterStatus }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
   
-  const loanEmployees = users.filter(u => u.role === 'loan_employee');
+  const loanEmployees = users.filter(u => u.role === 'loan_employee' || u.role === 'loan_admin');
 
   const isEmployee = currentUser?.role === 'loan_employee';
   const isAccountant = currentUser?.role === 'accountant';
@@ -289,7 +289,7 @@ const LoanClients = ({ filterStatus }) => {
               style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '9999px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', width: '100%', fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.2s' }}
             />
           </div>
-          {!isEmployee && (
+          {!isEmployee && !isAccountant && (
             <select
               value={uiStatusFilter}
               onChange={e => setUiStatusFilter(e.target.value)}
@@ -335,7 +335,7 @@ const LoanClients = ({ filterStatus }) => {
           </button>
         </div>
         
-        {(!isEmployee && selectedLeads.length > 0) && (
+        {(!isEmployee && !isAccountant && selectedLeads.length > 0) && (
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <select 
               value={selectedEmployee} 
