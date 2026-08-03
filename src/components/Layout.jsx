@@ -161,6 +161,7 @@ const Layout = () => {
     accountant: [
       { path: '/accountant', label: 'Dashboard', icon: <HiOutlineSquares2X2 size={24} /> },
       { path: '/accountant/clients', label: 'All Clients', icon: <HiOutlineBriefcase size={24} /> },
+      { path: '/accountant/loan-clients', label: 'Loan Clients', icon: <HiOutlineDocumentText size={24} /> },
       { path: '/accountant/employee-data', label: 'Employee Data', icon: <HiOutlineUsers size={24} /> },
       { path: '/payment-history', label: 'Payment History', icon: <HiOutlineWallet size={24} /> },
       { path: '/notifications', label: 'Notifications', icon: <HiOutlineBell size={24} /> },

@@ -20,6 +20,7 @@ import {
 } from '../utils/clientRow';
 import UpcomingHolidays from '../components/UpcomingHolidays';
 import EmployeeData from './EmployeeData';
+import LoanClients from './LoanClients';
 
 const AccountantOverview = () => {
   const { users, clients, setSelectedClient, updateClientDetails } = useApp();
@@ -795,6 +796,7 @@ const AccountantDashboard = () => {
       <Route path="/" element={<AccountantOverview />} />
       <Route path="/clients" element={<AccountantClients />} />
       <Route path="/employee-data" element={<EmployeeData readOnly={true} />} />
+      <Route path="/loan-clients" element={<LoanClients />} />
     </Routes>
   );
 };
