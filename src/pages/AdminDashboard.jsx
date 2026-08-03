@@ -1295,12 +1295,15 @@ const UserEditModal = ({ user, onSave, onCancel }) => {
     name: user.name || '',
     password: user.password || '',
     role: user.role || 'sales',
+    email: user.email || '',
+    phone: user.phone || '',
+    birthdate: user.birthdate ? user.birthdate.substring(0, 10) : '',
     createdAt: user.createdAt ? user.createdAt.substring(0, 10) : ''
   });
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
-      <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', padding: '2rem', width: '90%', maxWidth: '450px', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+      <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', padding: '2rem', width: '90%', maxWidth: '450px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
         <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Edit User Details</h3>
         
         <div style={{ display: 'grid', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -1315,6 +1318,30 @@ const UserEditModal = ({ user, onSave, onCancel }) => {
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Password</label>
             <input className="form-control" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Role</label>
+            <select className="form-control" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} style={{ width: '100%' }}>
+              <option value="sales">Sales (Caller)</option>
+              <option value="accountant">Accountant</option>
+              <option value="digital_marketing">Digital Marketing</option>
+              <option value="loan_employee">Loan Employee</option>
+              <option value="loan_admin">Loan Admin</option>
+              <option value="superadmin">Super Admin</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Email</label>
+            <input type="email" className="form-control" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Phone Number</label>
+            <input type="tel" className="form-control" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Birthdate</label>
+            <input type="date" className="form-control" value={formData.birthdate} onChange={e => setFormData({ ...formData, birthdate: e.target.value })} style={{ width: '100%' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.35rem' }}>Joined Date</label>
@@ -1415,6 +1442,10 @@ export const ManageUsers = ({ roleFilter, readOnly, canManageUsers, allowedRoles
     updateUser(updatedData.id, { 
       name: updatedData.name, 
       password: updatedData.password, 
+      role: updatedData.role,
+      email: updatedData.email,
+      phone: updatedData.phone,
+      birthdate: updatedData.birthdate ? new Date(updatedData.birthdate).toISOString() : undefined,
       createdAt: updatedData.createdAt ? new Date(updatedData.createdAt).toISOString() : undefined 
     });
     setSelectedUserForEdit(null);
