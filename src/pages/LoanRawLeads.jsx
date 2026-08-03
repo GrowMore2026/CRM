@@ -347,6 +347,13 @@ const LoanRawLeads = () => {
 
   return (
     <>
+      {isUploading && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--glass-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(8px)' }}>
+          <div style={{ width: '60px', height: '60px', border: '5px solid var(--bg-tertiary)', borderTop: '5px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1.5rem', boxShadow: '0 0 20px var(--accent-light)' }} />
+          <h2 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>Uploading Leads...</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.95rem' }}>Please do not close this window while we process the CSV.</p>
+        </div>
+      )}
       {modalConfig.show && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <div className="card animate-scale-in" style={{ background: 'var(--bg-primary)', padding: '2.5rem', borderRadius: '1rem', border: `1px solid ${modalConfig.type === 'error' ? '#ef4444' : '#10b981'}`, maxWidth: '450px', width: '90%', textAlign: 'center', boxShadow: 'var(--shadow-lg)' }}>

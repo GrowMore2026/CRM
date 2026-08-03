@@ -404,6 +404,7 @@ const DigitalMarketingLeads = () => {
   const fileInputRef = useRef(null);
   const [uploadListId, setUploadListId] = useState(null);
   const [uploadMessage, setUploadMessage] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const salesUsers = users?.filter(u => u.role === 'sales') || [];
 
@@ -453,6 +454,7 @@ const DigitalMarketingLeads = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (file && file.name.endsWith('.csv') && uploadListId) {
+      setIsUploading(true);
       try {
         const parsedData = await parseCSV(file);
         const existingLead = leads.find(l => l.list_id === uploadListId && l.managedBy);
@@ -488,6 +490,8 @@ const DigitalMarketingLeads = () => {
       } catch (err) {
         console.error(err);
         setUploadMessage({ type: 'error', text: 'Failed to parse and upload CSV.' });
+      } finally {
+        setIsUploading(false);
       }
     } else if (file) {
       setUploadMessage({ type: 'error', text: 'Please upload a valid CSV file.' });
@@ -608,6 +612,13 @@ const DigitalMarketingLeads = () => {
 
   return (
     <>
+      {isUploading && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--glass-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(8px)' }}>
+          <div style={{ width: '60px', height: '60px', border: '5px solid var(--bg-tertiary)', borderTop: '5px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1.5rem', boxShadow: '0 0 20px var(--accent-light)' }} />
+          <h2 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>Uploading Leads...</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.95rem' }}>Please do not close this window while we process the CSV.</p>
+        </div>
+      )}
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".csv" style={{ display: 'none' }} />
       <CreateLeadListModal isOpen={showLeadListModal} onClose={() => setShowLeadListModal(false)} />
       <div className="animate-fade-in">
