@@ -601,7 +601,7 @@ const MyClients = ({ isLeads = false }) => {
       name: c.name, email: c.email, phone: c.phone || '',
       city: c.city || (c.dynamic_data?.city) || '',
       state: c.state || (c.dynamic_data?.state) || '',
-      company: getClientCompanyName(c) || '', service: getClientServicesList(c) || [],
+      company: getClientCompanyName(c) || '', service: getClientServicesList(c) || [], type_of_service: c.type_of_service || c.dynamic_data?.service || c.dynamic_data?.type_of_service || '',
       budget: getClientBudgetAmount(c) || '', interested: c.interested, note: parsed.note || '',
       totalDeal: c.totalDealAmount ?? getClientBudgetAmount(c) ?? '',
       collectedPayment: c.paymentAmount ?? 0,
@@ -643,7 +643,7 @@ const MyClients = ({ isLeads = false }) => {
         name: editForm.name, email: editForm.email, phone: editForm.phone,
         city: editForm.city, state: editForm.state,
         interested: editForm.interested, company: editForm.company,
-        service: svc,
+        service: svc, type_of_service: editForm.type_of_service,
         budget: Number(editForm.budget) || 0,
         score: Number(editForm.totalDeal) || 0, // Reusing totalDeal for score in leads edit form temporarily
         status: editForm.status,
@@ -1044,7 +1044,10 @@ const MyClients = ({ isLeads = false }) => {
             </thead>
             <tbody>
               {displayClients.map(c => {
-                const services = getClientServicesList(c);
+                let services = getClientServicesList(c);
+                if (services.length === 0 && (c.type_of_service || c.dynamic_data?.service || c.dynamic_data?.type_of_service)) {
+                  services = [c.type_of_service || c.dynamic_data?.service || c.dynamic_data?.type_of_service];
+                }
                 const serviceName = services.length > 0 ? services[0] : '-';
                 const salesRep = c.managedBy ? (users.find(u => u.id === c.managedBy)?.name || c.managedBy) : 'Unassigned';
                 const dateCreated = c.created_at ? new Date(c.created_at).toLocaleDateString('en-GB').replace(/\//g, '-') : '-';
@@ -1093,7 +1096,10 @@ const MyClients = ({ isLeads = false }) => {
             const remaining = total - collected;
             const pct = total > 0 ? Math.min(100, Math.round((collected / total) * 100)) : 0;
             const fullPaid = remaining <= 0 && total > 0;
-            const services = getClientServicesList(c);
+            let services = getClientServicesList(c);
+            if (services.length === 0 && (c.type_of_service || c.dynamic_data?.service || c.dynamic_data?.type_of_service)) {
+              services = [c.type_of_service || c.dynamic_data?.service || c.dynamic_data?.type_of_service];
+            }
             const displayName = c.name || c.phone || c.email || '?';
             const ac = PALETTE[displayName.charCodeAt(0) % PALETTE.length];
             const initials = displayName === '?' ? '?' : displayName.split(/[\s_-]+/).filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
@@ -1200,6 +1206,10 @@ const MyClients = ({ isLeads = false }) => {
                     <input className="form-control" style={{ fontSize: '0.9rem', padding: '0.5rem', opacity: currentUser?.role === 'sales' ? 0.7 : 1 }} disabled={currentUser?.role === 'sales'} value={editForm.state} onChange={e => setEditForm({ ...editForm, state: e.target.value })} placeholder="State" />
                   </div>
                   <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'block' }}>Service</label>
+                    <input className="form-control" style={{ fontSize: '0.9rem', padding: '0.5rem', opacity: currentUser?.role === 'sales' ? 0.7 : 1 }} disabled={currentUser?.role === 'sales'} value={editForm.type_of_service || editForm.dynamic_data?.service || editForm.dynamic_data?.type_of_service || ''} onChange={e => setEditForm({ ...editForm, type_of_service: e.target.value })} placeholder="Service" />
+                  </div>
+                  <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'block' }}>Status</label>
                     <select className="form-control" style={{ fontSize: '0.9rem', padding: '0.5rem' }} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
                       <option value="CREATED">CREATED</option>
@@ -1220,7 +1230,7 @@ const MyClients = ({ isLeads = false }) => {
                 {Object.keys(editForm.dynamic_data || {}).length > 0 && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
                     {Object.keys(editForm.dynamic_data).map(key => {
-                      if (['company', 'city', 'state', 'notes', 'score', 'budget', 'service', 'campaign'].includes(key.toLowerCase())) return null;
+                      if (['company', 'city', 'state', 'notes', 'service', 'type_of_service'].includes(key.toLowerCase())) return null;
                       return (
                         <div key={key}>
                           <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'block', textTransform: 'capitalize' }}>{key}</label>
