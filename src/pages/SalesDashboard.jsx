@@ -8,6 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Users, UserCheck, Wallet, Target, Building2, Phone, Mail, FileText, Briefcase, Save, User, Search, CreditCard, Edit2, Trash2, CheckCircle, Clock, UserPlus, Upload, Download, X, Eye } from 'lucide-react';
 import UpcomingHolidays from '../components/UpcomingHolidays';
 import MarketingLeadsChart from '../components/MarketingLeadsChart';
+import RawLeadsChart from '../components/RawLeadsChart';
 import { ALL_SERVICES } from '../components/ServicePicker';
 import AddNewClient from './AddNewClient';
 // ─── Service Picker ───────────────────────────────────────────────────────────
@@ -237,37 +238,9 @@ const SalesOverview = () => {
     return data;
   }, [summaryMonth, myClientsAll, currentUser.id]);
 
-  const leadsChartData = useMemo(() => {
-    const myLeads = leads.filter(l => l.createdBy === currentUser.id || l.managedBy === currentUser.id);
-    const statusCounts = {};
-    myLeads.forEach(l => {
-      const s = l.status || 'CREATED';
-      statusCounts[s] = (statusCounts[s] || 0) + 1;
-    });
-    return Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }, [leads, currentUser.id]);
-
-  const rawLeadsChartData = useMemo(() => {
-    const myRawLeads = (rawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED');
-    const statusCounts = {};
-    myRawLeads.forEach(l => {
-      statusCounts[l.status] = (statusCounts[l.status] || 0) + 1;
-    });
-    return Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  const myRawLeads = useMemo(() => {
+    return (rawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED');
   }, [rawLeads, currentUser.id]);
-
-  const totalRawLeadsCalled = useMemo(() => {
-    return (rawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED').length;
-  }, [rawLeads, currentUser.id]);
-
-  const LEAD_COLORS = {
-    'CREATED': '#6366f1',
-    'CONTACTED': '#3b82f6',
-    'QUALIFIED': '#10b981',
-    'PROPOSAL': '#f59e0b',
-    'NEGOTIATION': '#8b5cf6',
-    'LOST': '#ef4444'
-  };
 
   const RAW_LEAD_COLORS = {
     'Interested': '#10b981',
@@ -485,87 +458,9 @@ const SalesOverview = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 250px', gap: '1.5rem', marginBottom: '2rem' }}>
-        {/* ── Marketing Leads Chart ── */}
-        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0' }}>Marketing Leads</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Distribution by status for your leads</p>
-            </div>
-          </div>
-          {leadsChartData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No leads found</div>
-          ) : (
-            <div style={{ width: '100%', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={leadsChartData}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {leadsChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={LEAD_COLORS[entry.name] || '#94a3b8'} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', color: 'var(--text-primary)' }}
-                    itemStyle={{ color: 'var(--text-primary)' }}
-                  />
-                  <Legend verticalAlign="bottom" align="center" layout="horizontal" wrapperStyle={{ fontSize: '0.8rem', paddingTop: '10px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-
-        {/* ── Raw Leads Chart ── */}
-        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0' }}>Raw Leads Activity</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Distribution of raw leads you processed</p>
-            </div>
-          </div>
-          {rawLeadsChartData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No processed raw leads found</div>
-          ) : (
-            <div style={{ width: '100%', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={rawLeadsChartData}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {rawLeadsChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={RAW_LEAD_COLORS[entry.name] || '#94a3b8'} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', color: 'var(--text-primary)' }}
-                    itemStyle={{ color: 'var(--text-primary)' }}
-                  />
-                  <Legend verticalAlign="bottom" align="center" layout="horizontal" wrapperStyle={{ fontSize: '0.8rem', paddingTop: '10px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-        {statCard('Raw Leads Called', totalRawLeadsCalled, <Phone size={24} />, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
-      </div>
-
-      {/* ── Marketing Leads Chart ── */}
-      <div style={{ marginBottom: '2rem' }}>
+      {/* ── Leads Charts ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <RawLeadsChart rawLeads={myRawLeads} />
         <MarketingLeadsChart leads={myLeads} />
       </div>
     </div>
