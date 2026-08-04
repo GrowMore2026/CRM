@@ -156,8 +156,6 @@ const LoanAdminOverview = ({ hideHolidays }) => {
 
       {/* Charts Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <MarketingLeadsChart leads={myLeads} />
-        <RawLeadsChart rawLeads={myLoanRawLeads} title="Loan Raw Leads" totalLabel="TOTAL LOAN RAW" />
         <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
           <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Loan Status Breakdown</h3>
           <div style={{ height: '300px' }}>
@@ -291,6 +289,12 @@ const LoanAdminOverview = ({ hideHolidays }) => {
             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No employees found.</div>
           )}
         </div>
+      </div>
+
+      {/* Leads Charts Bottom Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+        <MarketingLeadsChart leads={myLeads} />
+        <RawLeadsChart rawLeads={myLoanRawLeads} title="Loan Raw Leads" totalLabel="TOTAL LOAN RAW" />
       </div>
     </div>
   );
