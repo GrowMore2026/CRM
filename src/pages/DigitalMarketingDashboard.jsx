@@ -406,7 +406,7 @@ const DigitalMarketingLeads = () => {
   const [uploadMessage, setUploadMessage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  const salesUsers = users?.filter(u => u.role === 'sales') || [];
+  const assignableUsers = users?.filter(u => ['sales', 'loan_admin', 'loan_employee'].includes(u.role)) || [];
 
   const [formData, setFormData] = useState({ 
     name: '', email: '', phone: '', source: '', ownerName: '', type_of_service: '', city: '', state: '' 
@@ -776,7 +776,7 @@ const DigitalMarketingLeads = () => {
                 style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', outline: 'none' }}
               >
                 <option value="">Select an employee...</option>
-                {salesUsers.map(u => (
+                {assignableUsers.map(u => (
                   <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
                 ))}
               </select>
