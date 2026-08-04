@@ -180,6 +180,7 @@ const Layout = () => {
     loan_employee: [
       { path: '/loan-employee', label: 'Dashboard', icon: <HiOutlineSquares2X2 size={24} /> },
       { path: '/loan-employee/add-loan-file', label: 'Add New Loan File', icon: <HiOutlineDocumentText size={24} /> },
+      { path: '/loan-employee/leads', label: 'Marketing Leads', icon: <HiOutlineMegaphone size={24} /> },
       { 
         path: '/loan-employee/clients', 
         label: 'Clients', 
@@ -219,6 +220,7 @@ const Layout = () => {
     loan_admin: [
       { path: '/loan-admin', label: 'Dashboard', icon: <HiOutlineSquares2X2 size={24} /> },
       { path: '/loan-admin/add-loan-file', label: 'Add New Loan File', icon: <HiOutlineDocumentText size={24} /> },
+      { path: '/loan-admin/leads', label: 'Marketing Leads', icon: <HiOutlineMegaphone size={24} /> },
       { path: '/loan-admin/clients', label: 'Clients', icon: <HiOutlineUsers size={24} /> },
       { path: '/loan-admin/approved-files', label: 'Approved Files', icon: <HiOutlineCheckCircle size={24} /> },
       { path: '/loan-admin/rejected-files', label: 'Rejected Files', icon: <HiOutlineXCircle size={24} /> },

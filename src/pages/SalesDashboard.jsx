@@ -1350,4 +1350,5 @@ const SalesDashboard = () => (
   </Routes>
 );
 
+export { MyClients as SalesMyClients };
 export default SalesDashboard;

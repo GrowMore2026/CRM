@@ -4,7 +4,7 @@ import { useApp } from './context/AppProvider';
 // Pages
 import Login from './pages/Login';
 import AdminDashboard, { ManageUsers } from './pages/AdminDashboard';
-import SalesDashboard from './pages/SalesDashboard';
+import SalesDashboard, { SalesMyClients } from './pages/SalesDashboard';
 import AccountantDashboard from './pages/AccountantDashboard';
 import DigitalMarketingDashboard from './pages/DigitalMarketingDashboard';
 import LoanEmployeeDashboard from './pages/LoanEmployeeDashboard';
@@ -98,6 +98,11 @@ function App() {
               <LoanClients />
             </ProtectedRoute>
           } />
+          <Route path="loan-employee/leads" element={
+            <ProtectedRoute allowedRoles={['loan_employee']}>
+              <SalesMyClients isLeads={true} />
+            </ProtectedRoute>
+          } />
           <Route path="loan-employee/approved-files" element={
             <ProtectedRoute allowedRoles={['loan_employee']}>
               <LoanClients filterStatus="Cheque Handover" />
@@ -116,6 +121,11 @@ function App() {
           <Route path="loan-admin/clients" element={
             <ProtectedRoute allowedRoles={['loan_admin']}>
               <LoanClients />
+            </ProtectedRoute>
+          } />
+          <Route path="loan-admin/leads" element={
+            <ProtectedRoute allowedRoles={['loan_admin']}>
+              <SalesMyClients isLeads={true} />
             </ProtectedRoute>
           } />
           <Route path="loan-admin/approved-files" element={
