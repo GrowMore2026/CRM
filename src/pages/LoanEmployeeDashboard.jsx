@@ -7,10 +7,12 @@ import { FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
 import AddNewLoanFile from './AddNewLoanFile';
 import UpcomingHolidays from '../components/UpcomingHolidays';
 import MarketingLeadsChart from '../components/MarketingLeadsChart';
+import RawLeadsChart from '../components/RawLeadsChart';
 
 const LoanEmployeeOverview = () => {
-  const { currentUser, leads, dataLoading } = useApp();
+  const { currentUser, leads, dataLoading, loanRawLeads } = useApp();
   const myLeads = (leads || []).filter(l => l.createdBy === currentUser.id || l.managedBy === currentUser.id);
+  const myLoanRawLeads = (loanRawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED');
   const [loanFiles, setLoanFiles] = useState([]);
   const [loadingLoans, setLoadingLoans] = useState(true);
 
@@ -153,13 +155,12 @@ const LoanEmployeeOverview = () => {
               )}
             </div>
           </div>
-          <MarketingLeadsChart leads={myLeads} />
         </div>
 
-        {/* Right Column: Chart & Holidays */}
+        {/* Right Column: Chart */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+          <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', height: '100%' }}>
             <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>My Loan Pipeline</h3>
             <div style={{ height: '250px' }}>
               {statusData.length > 0 ? (
@@ -178,12 +179,15 @@ const LoanEmployeeOverview = () => {
               )}
             </div>
           </div>
-
-          <div style={{ flex: 1 }}>
-            <UpcomingHolidays />
-          </div>
-
         </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        <RawLeadsChart rawLeads={myLoanRawLeads} title="Loan Raw Leads" totalLabel="TOTAL LOAN RAW" />
+        <MarketingLeadsChart leads={myLeads} />
+      </div>
+      <div style={{ marginBottom: '2rem' }}>
+        <UpcomingHolidays />
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ const RAW_LEAD_COLORS = {
   'Not Pickup': '#f43f5e'
 };
 
-const RawLeadsChart = ({ rawLeads = [] }) => {
+const RawLeadsChart = ({ rawLeads = [], title = "Raw Leads Activity", totalLabel = "TOTAL RAW LEADS" }) => {
   const statusCounts = {};
   rawLeads.forEach(l => {
     if (l.status) {
@@ -33,7 +33,7 @@ const RawLeadsChart = ({ rawLeads = [] }) => {
   if (total === 0) {
     return (
       <div className="card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.5rem', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <h3 className="text-h3" style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontWeight: '700' }}>Raw Leads Activity</h3>
+        <h3 className="text-h3" style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontWeight: '700' }}>{title}</h3>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: '500' }}>
           No processed raw leads found
         </div>
@@ -43,9 +43,9 @@ const RawLeadsChart = ({ rawLeads = [] }) => {
 
   return (
     <div className="card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.5rem', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <h3 className="text-h3" style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontWeight: '700' }}>Raw Leads Activity</h3>
+      <h3 className="text-h3" style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontWeight: '700' }}>{title}</h3>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-        
+
         {/* Chart */}
         <div style={{ height: '220px', width: '220px', position: 'relative', flexShrink: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -64,15 +64,15 @@ const RawLeadsChart = ({ rawLeads = [] }) => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', boxShadow: 'var(--shadow-lg)' }} 
+              <Tooltip
+                contentStyle={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', boxShadow: 'var(--shadow-lg)' }}
                 itemStyle={{ color: 'var(--text-primary)', fontWeight: '600' }}
               />
             </PieChart>
           </ResponsiveContainer>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', lineHeight: '1.2' }}>{total}</div>
-            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '1px' }}>TOTAL RAW LEADS</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '1px' }}>{totalLabel}</div>
           </div>
         </div>
 
