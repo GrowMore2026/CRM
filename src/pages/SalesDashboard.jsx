@@ -962,6 +962,7 @@ const MyClients = ({ isLeads = false }) => {
                 <option value="CUT_CALL">Cut Call</option>
                 <option value="DND">DND</option>
                 <option value="Voice Mail">Voice Mail</option>
+                <option value="Switch Off">Switch Off</option>
               </>
             ) : (
               <>
@@ -1211,6 +1212,7 @@ const MyClients = ({ isLeads = false }) => {
                       <option value="CONNECTIVITY_ISSUE">connectivity issue</option>
                       <option value="DND">DND</option>
                       <option value="VOICE_MAIL">Voice Mail</option>
+                      <option value="SWITCH_OFF">Switch Off</option>
                     </select>
                   </div>
                 </div>

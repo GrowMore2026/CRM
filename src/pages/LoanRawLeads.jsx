@@ -328,6 +328,7 @@ const LoanRawLeads = () => {
                 <option value="connectivity issue">connectivity issue</option>
                 <option value="DND">DND</option>
                 <option value="Voice Mail">Voice Mail</option>
+                <option value="Switch Off">Switch Off</option>
               </select>
               
               <button 
