@@ -7,6 +7,7 @@ import { getClientBudgetAmount, getClientCompanyName, getClientServicesList, par
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Users, UserCheck, Wallet, Target, Building2, Phone, Mail, FileText, Briefcase, Save, User, Search, CreditCard, Edit2, Trash2, CheckCircle, Clock, UserPlus, Upload, Download, X, Eye } from 'lucide-react';
 import UpcomingHolidays from '../components/UpcomingHolidays';
+import MarketingLeadsChart from '../components/MarketingLeadsChart';
 import { ALL_SERVICES } from '../components/ServicePicker';
 import AddNewClient from './AddNewClient';
 // ─── Service Picker ───────────────────────────────────────────────────────────
@@ -134,6 +135,7 @@ const SalesOverview = () => {
   const navigate = useNavigate();
   
   const myClientsAll = clients.filter(c => c.createdBy === currentUser.id || c.closer === currentUser.id || (c.managedBy === currentUser.id && !c.closer));
+  const myLeads = leads.filter(l => l.createdBy === currentUser.id || l.managedBy === currentUser.id);
   
   const [summaryMonth, setSummaryMonth] = useState(new Date().getMonth()); // 0-11, or -1 for All Time
 
@@ -332,6 +334,9 @@ const SalesOverview = () => {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* ── Marketing Leads Chart ── */}
+        <MarketingLeadsChart leads={myLeads} />
 
         {/* ── Payment History Donut ── */}
         <div className="card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '1.25rem', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column' }}>

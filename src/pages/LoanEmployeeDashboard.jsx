@@ -6,9 +6,11 @@ import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } 
 import { FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
 import AddNewLoanFile from './AddNewLoanFile';
 import UpcomingHolidays from '../components/UpcomingHolidays';
+import MarketingLeadsChart from '../components/MarketingLeadsChart';
 
 const LoanEmployeeOverview = () => {
-  const { currentUser, dataLoading } = useApp();
+  const { currentUser, leads, dataLoading } = useApp();
+  const myLeads = (leads || []).filter(l => l.createdBy === currentUser.id || l.managedBy === currentUser.id);
   const [loanFiles, setLoanFiles] = useState([]);
   const [loadingLoans, setLoadingLoans] = useState(true);
 
@@ -151,6 +153,7 @@ const LoanEmployeeOverview = () => {
               )}
             </div>
           </div>
+          <MarketingLeadsChart leads={myLeads} />
         </div>
 
         {/* Right Column: Chart & Holidays */}
