@@ -335,9 +335,6 @@ const SalesOverview = () => {
           </div>
         </div>
 
-        {/* ── Marketing Leads Chart ── */}
-        <MarketingLeadsChart leads={myLeads} />
-
         {/* ── Payment History Donut ── */}
         <div className="card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '1.25rem', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -565,6 +562,11 @@ const SalesOverview = () => {
           )}
         </div>
         {statCard('Raw Leads Called', totalRawLeadsCalled, <Phone size={24} />, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
+      </div>
+
+      {/* ── Marketing Leads Chart ── */}
+      <div style={{ marginBottom: '2rem' }}>
+        <MarketingLeadsChart leads={myLeads} />
       </div>
     </div>
   );
