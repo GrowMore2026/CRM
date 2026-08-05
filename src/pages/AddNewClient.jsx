@@ -133,7 +133,7 @@ const AddNewClient = ({ titleOverride, buttonOverride, successMessageOverride })
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                <label className="form-label">Company / Client Name *</label>
+                <label className="form-label">Company Name *</label>
                 <div style={{ position: 'relative' }}>
                   <input type="text" className="form-control" placeholder="e.g. ACME PVT. LTD." value={formData.company} onChange={e => setFormData({ ...formData, company: e.target.value.toUpperCase() })} required style={{ paddingLeft: '2.75rem' }} />
                   <Briefcase size={18} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />

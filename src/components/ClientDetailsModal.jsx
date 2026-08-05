@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Phone, CreditCard, FileText, Building2, CheckCircle, MapPin, Calendar, Edit, Save } from 'lucide-react';
+import { X, Mail, Phone, CreditCard, FileText, Building2, CheckCircle, MapPin, Calendar, Edit, Save, User } from 'lucide-react';
 import { useApp } from '../context/AppProvider';
 import { 
   getClientCreationDate, 
@@ -186,9 +186,9 @@ const ClientDetailsModal = ({ client, onClose }) => {
                 </div>
               ) : (
                 <>
-                  <h3 style={{ margin: '0 0 0.3rem', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{client.name}</h3>
+                  <h3 style={{ margin: '0 0 0.3rem', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{company || client.name}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center' }}>
-                    {company && <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: '500' }}><Building2 size={13} color="var(--text-muted)"/> {company}</span>}
+                    {client.name && <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: '500' }}><User size={13} color="var(--text-muted)"/> {client.name}</span>}
                     <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Calendar size={13} /> Created: {formattedDate}
                     </span>
