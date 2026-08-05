@@ -136,7 +136,7 @@ const SalesLeadListCard = ({ list, leads, onViewLeads }) => {
 };
 
 const SalesOverview = () => {
-  const { clients, leads, rawLeads, currentUser , setSelectedClient } = useApp();
+  const { clients, leads, rawLeads, campaigns, currentUser , setSelectedClient } = useApp();
   const navigate = useNavigate();
   
   const myClientsAll = clients.filter(c => c.createdBy === currentUser.id || c.closer === currentUser.id || (c.managedBy === currentUser.id && !c.closer));

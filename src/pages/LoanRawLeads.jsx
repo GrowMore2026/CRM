@@ -29,10 +29,15 @@ const LoanRawLeads = () => {
 
   useEffect(() => {
     if (currentUser?.role === 'loan_employee' || currentUser?.role === 'loan_admin') {
-      const existingActive = loanRawLeads?.find(l => l.claimed_by === currentUser.id && l.status === 'PENDING');
+      const existingActive = loanRawLeads?.find(l => {
+        if (l.claimed_by !== currentUser?.id || l.status !== 'PENDING') return false;
+        const camp = loanCampaigns?.find(c => c.id === l.campaign_id);
+        if (camp && !camp.is_active) return false;
+        return true;
+      });
       setActiveLead(existingActive || null);
     }
-  }, [currentUser, loanRawLeads]);
+  }, [currentUser, loanRawLeads, loanCampaigns]);
 
   const handleNextLead = async () => {
     setIsProcessing(true);

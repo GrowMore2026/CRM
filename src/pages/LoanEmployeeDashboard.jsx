@@ -10,7 +10,7 @@ import MarketingLeadsChart from '../components/MarketingLeadsChart';
 import RawLeadsChart from '../components/RawLeadsChart';
 
 const LoanEmployeeOverview = () => {
-  const { currentUser, leads, dataLoading, loanRawLeads } = useApp();
+  const { currentUser, leads, dataLoading, loanRawLeads, loanCampaigns } = useApp();
   const myLeads = (leads || []).filter(l => l.createdBy === currentUser.id || l.managedBy === currentUser.id);
   const myLoanRawLeads = (loanRawLeads || []).filter(l => l.claimed_by === currentUser.id && l.status && l.status !== 'PENDING' && l.status !== 'UNASSIGNED');
   const [loanFiles, setLoanFiles] = useState([]);

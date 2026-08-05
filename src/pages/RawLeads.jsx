@@ -29,10 +29,15 @@ const RawLeads = () => {
 
   useEffect(() => {
     if (currentUser?.role === 'sales') {
-      const existingActive = rawLeads?.find(l => l.claimed_by === currentUser.id && l.status === 'PENDING');
+      const existingActive = rawLeads?.find(l => {
+        if (l.claimed_by !== currentUser?.id || l.status !== 'PENDING') return false;
+        const camp = campaigns?.find(c => c.id === l.campaign_id);
+        if (camp && !camp.is_active) return false;
+        return true;
+      });
       setActiveLead(existingActive || null);
     }
-  }, [currentUser, rawLeads]);
+  }, [currentUser, rawLeads, campaigns]);
 
   const handleNextLead = async () => {
     setIsProcessing(true);
