@@ -292,10 +292,12 @@ const LoanAdminOverview = ({ hideHolidays }) => {
       </div>
 
       {/* Leads Charts Bottom Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-        <MarketingLeadsChart leads={myLeads} />
-        <RawLeadsChart rawLeads={myLoanRawLeads} title="Loan Raw Leads" totalLabel="TOTAL LOAN RAW" />
-      </div>
+      {currentUser?.role !== 'superadmin' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+          <MarketingLeadsChart leads={myLeads} />
+          <RawLeadsChart rawLeads={myLoanRawLeads} title="Loan Raw Leads" totalLabel="TOTAL LOAN RAW" />
+        </div>
+      )}
     </div>
   );
 };
