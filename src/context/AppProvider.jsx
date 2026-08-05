@@ -365,7 +365,17 @@ export const AppProvider = ({ children }) => {
   const addUser = (userData) => {
     if (users.find(u => u.id === userData.id)) return false;
     setUsers(prev => [...prev, userData]);
-    supabase.from('users').insert([userData]).then(({ error }) => {
+    
+    const payload = { ...userData };
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === '') payload[key] = null;
+    });
+    if (payload.createdAt !== undefined) {
+      payload.joing = payload.createdAt;
+      delete payload.createdAt;
+    }
+
+    supabase.from('users').insert([payload]).then(({ error }) => {
       if (error) console.error('[supabase] addUser:', error);
     });
     return true;
@@ -376,9 +386,19 @@ export const AppProvider = ({ children }) => {
     if (currentUser?.id === userId) {
       setCurrentUser(prev => ({ ...prev, ...details }));
     }
+
+    const payload = { ...details };
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === '') payload[key] = null;
+    });
+    if (payload.createdAt !== undefined) {
+      payload.joing = payload.createdAt;
+      delete payload.createdAt;
+    }
+
     const { data, error } = await supabase
       .from('users')
-      .update(details)
+      .update(payload)
       .eq('id', userId)
       .select();
     if (error) console.error('[supabase] updateUser error:', error);
