@@ -386,10 +386,22 @@ export const AppProvider = ({ children }) => {
   };
 
   const removeUser = async (userId) => {
+    const userToDelete = users.find(u => u.id === userId);
+    const isSalesEmployee = userToDelete?.role === 'sales';
+    const targetAccount = users.find(u => u.employeeId === 'Account_Clients' || u.email === 'Account_Clients' || u.id === 'Account_Clients' || u.name === 'Account_Clients');
+    const shouldTransfer = isSalesEmployee && targetAccount;
+
     // Optimistically remove from UI immediately
     setUsers(prev => prev.filter(u => u.id !== userId));
     setTasks(prev => prev.filter(t => t.createdBy !== userId && t.assignedTo !== userId));
-    setClients(prev => prev.filter(c => c.managedBy !== userId && c.createdBy !== userId));
+    
+    if (shouldTransfer) {
+      const targetId = targetAccount.id;
+      setClients(prev => prev.map(c => (c.managedBy === userId || c.createdBy === userId) ? { ...c, managedBy: targetId, createdBy: targetId, closer: targetId } : c));
+    } else {
+      setClients(prev => prev.filter(c => c.managedBy !== userId && c.createdBy !== userId));
+    }
+    
     setIncentives(prev => prev.filter(i => i.employeeId !== userId));
     setNotifications(prev => prev.filter(n => n.userId !== userId));
 
@@ -409,10 +421,16 @@ export const AppProvider = ({ children }) => {
     const { data: userClients } = await supabase
       .from(CLIENTS_TABLE).select('id').or(`managedBy.eq.${userId},createdBy.eq.${userId}`);
     if (userClients?.length) {
-      for (const c of userClients) {
-        await supabase.from('incentives').delete().eq('clientId', c.id);
+      if (shouldTransfer) {
+        const targetId = targetAccount.id;
+        const { error: transferErr } = await supabase.from(CLIENTS_TABLE).update({ managedBy: targetId, createdBy: targetId, closer: targetId }).or(`managedBy.eq.${userId},createdBy.eq.${userId}`);
+        if (transferErr) console.error('[supabase] removeUser — transfer clients:', transferErr);
+      } else {
+        for (const c of userClients) {
+          await supabase.from('incentives').delete().eq('clientId', c.id);
+        }
+        await supabase.from(CLIENTS_TABLE).delete().or(`managedBy.eq.${userId},createdBy.eq.${userId}`);
       }
-      await supabase.from(CLIENTS_TABLE).delete().or(`managedBy.eq.${userId},createdBy.eq.${userId}`);
     }
 
     // Step 5: Finally delete the user

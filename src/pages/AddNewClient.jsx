@@ -10,7 +10,7 @@ const AddNewClient = ({ titleOverride, buttonOverride, successMessageOverride })
   const salesUsers = users.filter(u => u.role === 'sales');
   
   const [formData, setFormData] = useState({
-    company: '', email: '', phone: '', budget: '', collectedPayment: '', withGstPayment: '', onlyGstAmount: '', totalDealWithGst: '', totalDealGstAmount: '', service: [], closer: '', panNumber: '', gstNumber: '', creationDate: new Date().toISOString().split('T')[0]
+    company: '', customerName: '', email: '', phone: '', budget: '', collectedPayment: '', withGstPayment: '', onlyGstAmount: '', totalDealWithGst: '', totalDealGstAmount: '', service: [], closer: '', panNumber: '', gstNumber: '', creationDate: new Date().toISOString().split('T')[0]
   });
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
@@ -68,7 +68,7 @@ const AddNewClient = ({ titleOverride, buttonOverride, successMessageOverride })
     const totalDeal = Number(formData.budget) || 0;
     const collected = Number(formData.collectedPayment) || 0;
     addClient({
-      name: formData.company,
+      name: formData.customerName || formData.company,
       email: formData.email,
       phone: formData.phone,
       service: formData.service,
@@ -156,6 +156,13 @@ const AddNewClient = ({ titleOverride, buttonOverride, successMessageOverride })
               <User size={20} color="var(--accent-primary)" /> Primary Contact
             </h3>
             <div className="grid grid-cols-2 gap-4">
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Customer Name *</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="text" className="form-control" placeholder="e.g. John Doe" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} required style={{ paddingLeft: '2.75rem' }} />
+                  <User size={18} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                </div>
+              </div>
               <div className="form-group">
                 <label className="form-label">Email Address *</label>
                 <div style={{ position: 'relative' }}>
