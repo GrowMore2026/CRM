@@ -9,7 +9,19 @@ const RAW_LEAD_COLORS = {
   'Invalid': '#6b7280',
   'DND': '#8b5cf6',
   'Busy': '#eab308',
-  'Not Pickup': '#f43f5e'
+  'Not Pickup': '#f43f5e',
+  
+  // Loan statuses
+  'intretsed': '#10b981',
+  'call back': '#3b82f6',
+  'not intrested': '#ef4444',
+  'language issue': '#f59e0b',
+  'connectivity issue': '#8b5cf6',
+  'DND': '#8b5cf6', // Duplicate key is fine, but it's capitalized in loan too? Loan uses 'DND'
+  'Voice Mail': '#a855f7',
+  'Switch Off': '#64748b',
+  'intro': '#0ea5e9',
+  'not pick up': '#f43f5e'
 };
 
 const RawLeadsChart = ({ rawLeads = [], title = "Raw Leads Activity", totalLabel = "TOTAL RAW LEADS" }) => {
