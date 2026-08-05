@@ -187,7 +187,7 @@ const LoanAdminOverview = ({ hideHolidays }) => {
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                   <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                   <RechartsTooltip cursor={{ fill: 'var(--bg-tertiary)' }} contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px' }} />
-                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={24} />
+                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={48} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
