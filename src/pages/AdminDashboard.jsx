@@ -194,7 +194,7 @@ const AdminOverview = ({ readOnly }) => {
   const chartData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
-    const data = months.map(m => ({ name: m, amount: 0 }));
+    const data = months.map(m => ({ name: m, amount: 0, loanBanker: 0, loanCustomer: 0 }));
 
     visibleClients.forEach(c => {
       const clientPayments = getClientPaymentsList(c);
@@ -209,8 +209,16 @@ const AdminOverview = ({ readOnly }) => {
       });
     });
 
+    loanFiles.forEach(l => {
+      const d = l.createdAt ? new Date(l.createdAt) : null;
+      if (d && !isNaN(d.getTime()) && d.getFullYear() === currentYear) {
+        data[d.getMonth()].loanCustomer += Number(l.customerSideAmount) || 0;
+        data[d.getMonth()].loanBanker += Number(l.bankSideAmount) || 0;
+      }
+    });
+
     return data;
-  }, [visibleClients]);
+  }, [visibleClients, loanFiles]);
 
   const userChartData = useMemo(() => {
     return [
@@ -591,6 +599,14 @@ const AdminOverview = ({ readOnly }) => {
                         <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3} />
                         <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
                       </linearGradient>
+                      <linearGradient id="colorBanker" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorCustomer" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                      </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5} />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} dy={10} />
@@ -598,10 +614,20 @@ const AdminOverview = ({ readOnly }) => {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-                      tickFormatter={(val) => val >= 100000 ? `₹${(val / 100000).toFixed(1)}L` : val >= 1000 ? `₹${(val / 1000).toFixed(0)}k` : `₹${val}`}
+                      tickFormatter={(value) => `₹${value >= 100000 ? (value / 100000).toFixed(1) + 'L' : value}`}
                     />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="amount" stroke="var(--accent-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                    <Tooltip
+                      cursor={{ stroke: 'var(--border-color)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                      contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}
+                      formatter={(value, name) => {
+                        const labelMap = { amount: 'Client Revenue', loanBanker: 'Banker Side', loanCustomer: 'Loan Client' };
+                        return [`₹${value.toLocaleString('en-IN')}`, labelMap[name] || name];
+                      }}
+                    />
+                    <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '0.85rem', fontWeight: 600 }} />
+                    <Area type="monotone" name="amount" dataKey="amount" stroke="var(--accent-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                    <Area type="monotone" name="loanBanker" dataKey="loanBanker" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorBanker)" />
+                    <Area type="monotone" name="loanCustomer" dataKey="loanCustomer" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorCustomer)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -612,7 +638,7 @@ const AdminOverview = ({ readOnly }) => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center' }}>
-                    Daily Payment
+                    MSME Daily Payment
                     <span style={{ marginLeft: '1rem', padding: '0.25rem 0.75rem', background: '#10b981', color: '#fff', borderRadius: '1rem', fontSize: '0.9rem' }}>
                       Total: ₹{dailyChartData.reduce((s, i) => s + i.amount, 0).toLocaleString('en-IN')}
                     </span>
