@@ -1064,20 +1064,17 @@ const AdminOverview = ({ readOnly }) => {
                 {/* Lead Status Breakdown Chart */}
                 <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Lead Status Distribution</h3>
-                  <div style={{ width: '100%', height: '300px' }}>
+                  <div style={{ width: '100%', height: '450px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={dmMetrics.leadPipelineData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border-color)" opacity={0.5} />
                         <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
-                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} width={120} />
+                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} width={110} tickFormatter={(val) => val ? val.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : ''} />
                         <Tooltip cursor={{ fill: 'var(--bg-tertiary)' }} contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px' }} />
                         <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]}>
                           {dmMetrics.leadPipelineData.map((entry, index) => {
-                            let fillColor = '#6366f1';
-                            if (entry.name === 'INTERESTED') fillColor = '#10b981';
-                            else if (entry.name === 'NOT_INTERESTED') fillColor = '#ef4444';
-                            else if (entry.name === 'CALLBACK') fillColor = '#3b82f6';
-                            return <Cell key={`cell-${index}`} fill={fillColor} />;
+                            const CHART_COLORS = ['#6366f1', '#ef4444', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#0ea5e9', '#d946ef', '#84cc16'];
+                            return <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />;
                           })}
                         </Bar>
                       </BarChart>
@@ -1122,25 +1119,17 @@ const AdminOverview = ({ readOnly }) => {
                 {/* Raw Lead Status Breakdown Chart */}
                 <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Raw Lead Status Distribution</h3>
-                  <div style={{ width: '100%', height: '300px' }}>
+                  <div style={{ width: '100%', height: '450px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={rawLeadMetrics.rawLeadChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border-color)" opacity={0.5} />
                         <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
-                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} width={120} />
+                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} width={110} tickFormatter={(val) => val ? val.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : ''} />
                         <Tooltip cursor={{ fill: 'var(--bg-tertiary)' }} contentStyle={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', borderRadius: '8px' }} />
                         <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]}>
                           {rawLeadMetrics.rawLeadChartData.map((entry, index) => {
-                            let fillColor = '#94a3b8';
-                            if (entry.name === 'Interested') fillColor = '#10b981';
-                            else if (entry.name === 'Not Interested') fillColor = '#ef4444';
-                            else if (entry.name === 'Call Back') fillColor = '#3b82f6';
-                            else if (entry.name === 'Wrong Number') fillColor = '#f59e0b';
-                            else if (entry.name === 'Invalid') fillColor = '#6b7280';
-                            else if (entry.name === 'DND') fillColor = '#8b5cf6';
-                            else if (entry.name === 'Busy') fillColor = '#eab308';
-                            else if (entry.name === 'Not Pickup') fillColor = '#f43f5e';
-                            return <Cell key={`cell-${index}`} fill={fillColor} />;
+                            const CHART_COLORS = ['#6366f1', '#ef4444', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#0ea5e9', '#d946ef', '#84cc16'];
+                            return <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />;
                           })}
                         </Bar>
                       </BarChart>

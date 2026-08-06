@@ -632,7 +632,12 @@ const LoanClients = ({ filterStatus }) => {
                       onConfirm: async () => {
                         setSaving(true);
                         try {
-                          const { error } = await supabase.from('loan_files').update({ ...editForm, status: 'Rejected' }).eq('id', editForm.id);
+                          const sanitizedData = { ...editForm, status: 'Rejected' };
+                          const numericFields = ['age', 'monthlyIncome', 'propertyValue', 'loanAmount', 'downPayment', 'totalEmi', 'bankSideAmount', 'customerSideAmount', 'tdsAmount', 'netPayableAmount'];
+                          numericFields.forEach(field => {
+                            if (sanitizedData[field] === "") sanitizedData[field] = null;
+                          });
+                          const { error } = await supabase.from('loan_files').update(sanitizedData).eq('id', editForm.id);
                           if (error) throw error;
                           setLoanFiles(loanFiles.map(l => l.id === editForm.id ? { ...editForm, status: 'Rejected' } : l));
                           setViewingLoan(null);
@@ -656,7 +661,12 @@ const LoanClients = ({ filterStatus }) => {
                   onClick={async () => {
                     setSaving(true);
                     try {
-                      const { error } = await supabase.from('loan_files').update(editForm).eq('id', editForm.id);
+                      const sanitizedData = { ...editForm };
+                      const numericFields = ['age', 'monthlyIncome', 'propertyValue', 'loanAmount', 'downPayment', 'totalEmi', 'bankSideAmount', 'customerSideAmount', 'tdsAmount', 'netPayableAmount'];
+                      numericFields.forEach(field => {
+                        if (sanitizedData[field] === "") sanitizedData[field] = null;
+                      });
+                      const { error } = await supabase.from('loan_files').update(sanitizedData).eq('id', editForm.id);
                       if (error) throw error;
                       setLoanFiles(loanFiles.map(l => l.id === editForm.id ? { ...editForm } : l));
                       setViewingLoan(null);

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { Routes, Route, useNavigate, useSearchParams } from 'react-router-dom';
 import { Wallet, CreditCard, Target, Settings, Building2, Phone, Mail, FileText } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
+import { supabase } from '../supabaseClient';
 import { useApp } from '../context/AppProvider';
 import { 
   getClientCompanyName, 
@@ -51,6 +52,30 @@ const AccountantOverview = () => {
     });
     return data;
   }, [clients, currentYear]);
+
+  const [loanFiles, setLoanFiles] = useState([]);
+  
+  useEffect(() => {
+    const fetchLoans = async () => {
+      const { data } = await supabase.from('loan_files').select('createdAt, bankSideAmount, customerSideAmount');
+      if (data) setLoanFiles(data);
+    };
+    fetchLoans();
+  }, []);
+
+  const monthlyLoanData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const data = months.map(m => ({ name: m, Banker: 0, Customer: 0 }));
+    
+    loanFiles.forEach(c => {
+      const d = c.createdAt ? new Date(c.createdAt) : null;
+      if (d && !isNaN(d.getTime()) && d.getFullYear() === currentYear) {
+        data[d.getMonth()].Banker += Number(c.bankSideAmount) || 0;
+        data[d.getMonth()].Customer += Number(c.customerSideAmount) || 0;
+      }
+    });
+    return data;
+  }, [loanFiles, currentYear]);
 
   const pieData = [
     { name: 'Collected', value: totalCollected, color: '#10b981' },
@@ -228,6 +253,56 @@ const AccountantOverview = () => {
             ) : (
               <div style={{ color: 'var(--text-muted)' }}>No financial data available.</div>
             )}
+          </div>
+        </div>
+
+        {/* Banker Side Loan Revenue Chart */}
+        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Banker Side Loan Revenue ({currentYear})</h3>
+          <div style={{ width: '100%', height: '300px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyLoanData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorBanker" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} tickFormatter={val => `₹${val/1000}k`} />
+                <CartesianGrid vertical={false} stroke="var(--border-color)" strokeDasharray="3 3" />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', background: 'var(--bg-primary)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                  formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Banker Side']}
+                />
+                <Area type="monotone" dataKey="Banker" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorBanker)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Client Side Loan Revenue Chart */}
+        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Client Side Loan Revenue ({currentYear})</h3>
+          <div style={{ width: '100%', height: '300px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyLoanData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCustomer" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} tickFormatter={val => `₹${val/1000}k`} />
+                <CartesianGrid vertical={false} stroke="var(--border-color)" strokeDasharray="3 3" />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', background: 'var(--bg-primary)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                  formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Client Side']}
+                />
+                <Area type="monotone" dataKey="Customer" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorCustomer)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
