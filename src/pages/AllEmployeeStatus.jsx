@@ -25,27 +25,10 @@ const AllEmployeeStatus = () => {
   return (
     <div className="animate-fade-in" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
       
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Users size={28} color="var(--accent-primary)" />
-          All Employee Status
-        </h1>
-        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-          Monitor the real-time online presence of all employees in the portal.
-        </p>
-      </div>
 
-      {/* Table Section */}
-      <div style={{ background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
-        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>Employee Directory</h2>
-          <span style={{ padding: '0.35rem 1rem', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '700' }}>
-            {(users || []).length} Total Users
-          </span>
-        </div>
-        
-        <div style={{ padding: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+
+      {/* Cards Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
           {sortedUsers.map(user => {
             const online = isUserOnline(user);
             return (
@@ -115,7 +98,6 @@ const AllEmployeeStatus = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };
