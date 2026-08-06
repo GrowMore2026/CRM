@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppProvider';
 import ClientDetailsModal from './ClientDetailsModal';
+import OnlineBadge from './OnlineBadge';
 import { LogOut, Bell, Menu, X, Sun, Moon, Search as SearchIcon, ChevronDown, User, Settings } from 'lucide-react';
 import { 
   HiOutlineSquares2X2, 
@@ -88,6 +89,7 @@ const Layout = () => {
     if (p.includes('/admin-clients')) return 'Admin Clients';
     if (p.includes('/new-clients')) return 'New Clients';
     if (p.includes('/employee-data')) return 'Employee Data';
+    if (p.includes('/employee-status')) return 'All Employee Status';
     if (p.includes('/add-loan-file')) return 'Add New Loan File';
     if (p.includes('/add-client')) return 'Add New Client';
     if (p.includes('/payment-history')) return 'Payment History';
@@ -270,6 +272,7 @@ const Layout = () => {
         ]
       },
       { path: '/superadmin/employee-data', label: 'Employee Data', icon: <HiOutlineIdentification size={24} /> },
+      { path: '/superadmin/employee-status', label: 'Employee Status', icon: <HiOutlineUsers size={24} /> },
       { path: '/superadmin/clients', label: 'All System Clients', icon: <HiOutlineBriefcase size={24} /> },
       { path: '/superadmin/pipeline', label: 'Filter by Stage', icon: <HiOutlineSquares2X2 size={24} /> },
 
@@ -549,6 +552,7 @@ const Layout = () => {
                   <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {currentUser?.role === 'superadmin' ? 'Super Admin' : currentUser?.role?.replace('_', ' ')}
                   </span>
+                  <OnlineBadge user={users.find(u => u.id === currentUser?.id) || currentUser} />
                 </div>
                 <div style={{ 
                   width: '44px', 

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { Download, Users, Wallet, Target, Search, TrendingUp, Briefcase } from 'lucide-react';
+import { isUserOnline } from '../components/OnlineBadge';
 import { getClientBudgetAmount, getClientCompanyName, getClientServicesList, getClientTotalDealGst, getClientTotalDealWithGst } from '../utils/clientRow';
 import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 

@@ -19,6 +19,7 @@ import LoanRawLeads from './pages/LoanRawLeads';
 import LoanCalledLeads from './pages/LoanCalledLeads';
 import NotificationsPage from './pages/NotificationsPage';
 import Settings from './pages/Settings';
+import AllEmployeeStatus from './pages/AllEmployeeStatus';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -76,6 +77,11 @@ function App() {
           <Route path="superadmin/loan-rejected-files" element={
             <ProtectedRoute allowedRoles={['superadmin']}>
               <LoanClients filterStatus="Rejected" />
+            </ProtectedRoute>
+          } />
+          <Route path="superadmin/employee-status" element={
+            <ProtectedRoute allowedRoles={['superadmin']}>
+              <AllEmployeeStatus />
             </ProtectedRoute>
           } />
           <Route path="accountant/*" element={

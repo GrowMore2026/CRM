@@ -7,6 +7,7 @@ import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tool
 import { supabase } from '../supabaseClient';
 import SearchBar from '../components/SearchBar';
 import EmployeeData from './EmployeeData';
+import AllEmployeeStatus from './AllEmployeeStatus';
 import AllClientsAdmin from '../components/AllClientsAdmin';
 import AllTasksAdmin from '../components/AllTasksAdmin';
 import { DigitalMarketingLeads, DigitalMarketingLeadListView } from './DigitalMarketingDashboard';
@@ -2612,6 +2613,7 @@ const AdminDashboard = ({ readOnly, canManageUsers }) => (
         <Route path="/employees" element={<EmployeeOverviewPage readOnly={readOnly} />} />
         <Route path="/employee-clients/:id" element={<EmployeeClientsPage readOnly={readOnly} />} />
         <Route path="/employee-data" element={<EmployeeData readOnly={readOnly} />} />
+        <Route path="/employee-status" element={<AllEmployeeStatus />} />
         <Route path="/leads" element={<DigitalMarketingLeads />} />
         <Route path="/leads/:listId" element={<DigitalMarketingLeadListView />} />
 

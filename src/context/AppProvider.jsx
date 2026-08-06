@@ -214,6 +214,18 @@ export const AppProvider = ({ children }) => {
           setLeads(prev => prev.filter(l => l.id !== payload.old.id));
         }
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setUsers(prev => {
+            if (prev.some(u => u.id === payload.new.id)) return prev;
+            return [...prev, payload.new];
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          setUsers(prev => prev.map(u => u.id === payload.new.id ? payload.new : u));
+        } else if (payload.eventType === 'DELETE') {
+          setUsers(prev => prev.filter(u => u.id !== payload.old.id));
+        }
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_lists' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           setLeadLists(prev => {
@@ -309,13 +321,48 @@ export const AppProvider = ({ children }) => {
       const matchEmpId = u.employeeId && String(u.employeeId).trim().toLowerCase() === cleanId;
       return (matchId || matchEmail || matchEmpId) && u.password === password;
     });
-    if (user) { setCurrentUser(user); return true; }
+    if (user) {
+      setCurrentUser(user);
+      // Fire-and-forget update for immediate feedback
+      supabase.from('users').update({ is_online: true, last_active: new Date().toISOString() }).eq('id', user.id).then(({error}) => {
+         if (error && error.code !== '42P01') console.error('Online status update error:', error);
+      });
+      return true;
+    }
     return false;
   };
+  
   const logout = () => {
+    if (currentUser) {
+      supabase.from('users').update({ is_online: false }).eq('id', currentUser.id).then(({error}) => {
+        if (error && error.code !== '42P01') console.error('Offline status update error:', error);
+      });
+    }
     setCurrentUser(null);
     setNotifications([]);
   };
+
+  // ── Online Status Heartbeat ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const pingOnline = () => {
+      supabase.from('users').update({
+        is_online: true,
+        last_active: new Date().toISOString()
+      }).eq('id', currentUser.id).then(({error}) => {
+        if (error && error.code !== '42P01') console.error('Heartbeat error:', error);
+      });
+    };
+    
+    pingOnline(); // Initial ping
+    
+    const interval = setInterval(pingOnline, 60000); // Every 1 min
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [currentUser]);
 
   // ── Notifications ────────────────────────────────────────────────────────────
   // Send to a specific user. If it's the current user, also update local state.
