@@ -22,7 +22,8 @@ import {
   HiOutlineIdentification,
   HiOutlineCog6Tooth,
   HiOutlineInboxStack,
-  HiOutlineBanknotes
+  HiOutlineBanknotes,
+  HiOutlineSignal
 } from "react-icons/hi2";
 
 const Layout = () => {
@@ -272,7 +273,7 @@ const Layout = () => {
         ]
       },
       { path: '/superadmin/employee-data', label: 'Employee Data', icon: <HiOutlineIdentification size={24} /> },
-      { path: '/superadmin/employee-status', label: 'Portal Status', icon: <HiOutlineUsers size={24} /> },
+      { path: '/superadmin/employee-status', label: 'Portal Status', icon: <HiOutlineSignal size={24} /> },
       { path: '/superadmin/clients', label: 'All System Clients', icon: <HiOutlineBriefcase size={24} /> },
       { path: '/superadmin/pipeline', label: 'Filter by Stage', icon: <HiOutlineSquares2X2 size={24} /> },
 
