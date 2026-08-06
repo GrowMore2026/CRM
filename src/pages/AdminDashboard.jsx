@@ -1023,6 +1023,56 @@ const AdminOverview = ({ readOnly }) => {
             </>
           )}
 
+          {/* ── Loan Recently Added Clients ── */}
+          {readOnly && (
+            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Loan Recently Added Clients</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing latest 10 Cheque Handover clients</span>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                      <th style={{ padding: '0.75rem 1rem' }}>Date</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Loan Type</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Bank Amount</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Customer Amount</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Sales Rep</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...loanFiles]
+                      .filter(c => c.status === 'Cheque Handover')
+                      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                      .slice(0, 10)
+                      .map(c => {
+                        const date = c.createdAt;
+                        const salesRep = users.find(u => u.id === c.createdBy)?.name || 'Unassigned';
+                        return (
+                          <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                            <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '—'}</td>
+                            <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{c.fullName || '—'}</td>
+                            <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{c.typeOfLoan || '—'}</td>
+                            <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>₹{(Number(c.bankSideAmount) || 0).toLocaleString('en-IN')}</td>
+                            <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>₹{(Number(c.customerSideAmount) || 0).toLocaleString('en-IN')}</td>
+                            <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{salesRep}</td>
+                          </tr>
+                        );
+                      })}
+                    {loanFiles.length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No loan clients found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+
           {/* ── Digital Marketing Performance ── */}
           {dmMetrics && (
             <>

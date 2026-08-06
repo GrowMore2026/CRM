@@ -114,7 +114,7 @@ const ConfirmModal = ({ clientName, onConfirm, onCancel }) => (
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AllClientsAdmin = ({ paymentFilter, processFilter, stageFilter, readOnly, preFilteredClients, titleOverride, combineServices = true }) => {
-  const { clients, users, currentUser, updateClientStage, updateClientServiceStage, updateClientDetails, removeClient, assignClientToAdmin , setSelectedClient } = useApp();
+  const { clients, users, currentUser, updateClientStage, updateClientServiceStage, updateClientDetails, removeClient, assignClientToAdmin, setSelectedClient } = useApp();
 
   const [editingClient, setEditingClient] = useState(null);
   const [editForm, setEditForm] = useState({});

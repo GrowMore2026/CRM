@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppProvider';
 
 const AllTasksAdmin = ({ statusFilter }) => {
-  const { tasks, users , setSelectedClient } = useApp();
+  const { tasks, users, setSelectedClient } = useApp();
 
   let filteredTasks = tasks;
   if (statusFilter) {
@@ -18,7 +18,7 @@ const AllTasksAdmin = ({ statusFilter }) => {
   return (
     <div className="animate-fade-in">
       <h1 className="text-h1">{title}</h1>
-      
+
       <div className="card">
         <h2 className="text-h2 mb-4">Task Overview</h2>
         <div className="table-container">
@@ -36,7 +36,7 @@ const AllTasksAdmin = ({ statusFilter }) => {
               {sortedTasks.map(t => {
                 const assignee = users.find(u => u.id === t.assignedTo);
                 const creator = users.find(u => u.id === t.createdBy);
-                
+
                 return (
                   <tr key={t.id}>
                     <td style={{ fontWeight: '500' }}>{t.title}</td>
