@@ -60,7 +60,7 @@ const DigitalMarketingOverview = () => {
     };
   });
 
-  const STATUSES = ['INTERESTED', 'NOT_INTERESTED', 'CALLBACK', 'CONTACTED', 'DND', 'CUT_CALL', 'CREATED'];
+  const STATUSES = ['INTERESTED', 'NOT_INTERESTED', 'CALLBACK', 'CONTACTED', 'DND', 'CUT_CALL', 'CREATED', 'NOT_DOABLE', 'BUSY'];
   const STATUS_COLORS = {
     'INTERESTED': '#10b981',
     'NOT_INTERESTED': '#ef4444',
@@ -68,7 +68,9 @@ const DigitalMarketingOverview = () => {
     'CONTACTED': '#f59e0b',
     'DND': '#6b7280',
     'CUT_CALL': '#8b5cf6',
-    'CREATED': '#94a3b8'
+    'CREATED': '#94a3b8',
+    'NOT_DOABLE': '#f97316',
+    'BUSY': '#eab308'
   };
   
   const leadsStatusData = (leadLists || []).map(list => {

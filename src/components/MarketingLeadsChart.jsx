@@ -4,7 +4,8 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 const STATUSES = [
   'CREATED', 'NOT_PICK_UP', 'INTRO', 'CALLBACK', 
   'INTERESTED', 'NOT_INTERESTED', 'LANGUAGE_ISSUE', 
-  'CONNECTIVITY_ISSUE', 'DND', 'VOICE_MAIL', 'SWITCH_OFF'
+  'CONNECTIVITY_ISSUE', 'DND', 'VOICE_MAIL', 'SWITCH_OFF',
+  'NOT_DOABLE', 'BUSY'
 ];
 
 const STATUS_COLORS = {
@@ -18,7 +19,9 @@ const STATUS_COLORS = {
   'CONNECTIVITY_ISSUE': '#a855f7',
   'DND': '#6b7280',
   'VOICE_MAIL': '#8b5cf6',
-  'SWITCH_OFF': '#64748b'
+  'SWITCH_OFF': '#64748b',
+  'NOT_DOABLE': '#f97316',
+  'BUSY': '#eab308'
 };
 
 const STATUS_LABELS = {
@@ -32,7 +35,9 @@ const STATUS_LABELS = {
   'CONNECTIVITY_ISSUE': 'Connectivity Issue',
   'DND': 'DND',
   'VOICE_MAIL': 'Voice Mail',
-  'SWITCH_OFF': 'Switch Off'
+  'SWITCH_OFF': 'Switch Off',
+  'NOT_DOABLE': 'Not Doable',
+  'BUSY': 'Busy'
 };
 
 const MarketingLeadsChart = ({ leads = [] }) => {

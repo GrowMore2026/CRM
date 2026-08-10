@@ -1129,6 +1129,8 @@ const MyClients = ({ isLeads = false }) => {
                       <option value="DND">DND</option>
                       <option value="VOICE_MAIL">Voice Mail</option>
                       <option value="SWITCH_OFF">Switch Off</option>
+                      <option value="NOT_DOABLE">not doable</option>
+                      <option value="BUSY">Busy</option>
                     </select>
                   </div>
                 </div>
