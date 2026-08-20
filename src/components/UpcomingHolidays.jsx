@@ -12,15 +12,26 @@ const holidays = [
 const UpcomingHolidays = () => {
   const navigate = useNavigate();
 
+  const currentYear = new Date().getFullYear();
+  const upcomingList = holidays.filter(h => {
+    const holidayDate = new Date(`${h.date} ${currentYear}`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return holidayDate >= today;
+  });
+
   return (
-    <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', height: '100%' }}>
+    <div className="bento-card" style={{ height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Upcoming Holidays</h3>
         <ArrowRight size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => navigate('/holidays')} />
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {holidays.map((h, idx) => (
+        {upcomingList.length === 0 && (
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No upcoming holidays</div>
+        )}
+        {upcomingList.map((h, idx) => (
           <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
               <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{h.date}</span>

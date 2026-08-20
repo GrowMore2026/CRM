@@ -487,7 +487,7 @@ const AdminOverview = ({ readOnly }) => {
       {/* ── Status Cards & Widgets (Admin Only) ── */}
       {!readOnly && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="bento-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
             
             <UpcomingHolidays />
 
@@ -573,10 +573,10 @@ const AdminOverview = ({ readOnly }) => {
       {readOnly && (
         <>
           {/* ROW 1: Revenue and Daily Payments */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="bento-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
             {/* ── Revenue Overview Chart ── */}
 
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="bento-card" style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center' }}>
@@ -634,7 +634,7 @@ const AdminOverview = ({ readOnly }) => {
             </div>
 
             {/* ── Daily Payment Chart ── */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="bento-card" style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center' }}>
@@ -686,9 +686,9 @@ const AdminOverview = ({ readOnly }) => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="bento-grid" style={{ gridTemplateColumns: '1fr 1fr 2fr' }}>
             {/* ── Client Summary Donut (25%) ── */}
-            <div className="card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '1.25rem', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <div className="bento-card" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '2rem' }}>Client Summary</h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', flex: 1, justifyContent: 'center' }}>
@@ -740,7 +740,7 @@ const AdminOverview = ({ readOnly }) => {
             </div>
 
             {/* ── User Breakdown Chart (50%) ── */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '1.25rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', minWidth: 0 }}>
+            <div className="bento-card" style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center' }}>
@@ -793,15 +793,15 @@ const AdminOverview = ({ readOnly }) => {
 
           {/* ── MSME Recently Added Clients ── */}
           {readOnly && (
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+            <div className="bento-card" style={{ marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>MSME Recently Added Clients</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing latest 10 clients datewise</span>
               </div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <table className="table">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                    <tr >
                       <th style={{ padding: '0.75rem 1rem', width: '50px' }}>Edit</th>
                       <th style={{ padding: '0.75rem 1rem' }}>Date</th>
                       <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
@@ -819,7 +819,7 @@ const AdminOverview = ({ readOnly }) => {
                       const parsed = parseClientFeedback(getClientFeedbackText(c));
                       const dealVal = parsed.totalDealWithGst || Number(c.totalDealAmount) || 0;
                       return (
-                        <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                        <tr key={c.id}  >
                           <td style={{ padding: '0.75rem 1rem' }}>
                             <button 
                               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }} 
@@ -850,10 +850,10 @@ const AdminOverview = ({ readOnly }) => {
           )}
 
           {/* ── Side-by-Side Charts (Monthly Top 5 & Pipeline) ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="bento-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
 
             {/* ── Employee-wise Monthly Revenue Chart ── */}
-            <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="bento-card">
               <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <TrendingUp size={20} color="#10b981" /> Monthly Top 5 employees
               </h2>
@@ -875,7 +875,7 @@ const AdminOverview = ({ readOnly }) => {
             </div>
 
             {/* ── Pipeline Distribution Chart ── */}
-            <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="bento-card">
               <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Pipeline Distribution</h3>
               <div style={{ width: '100%', height: '300px' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -924,7 +924,7 @@ const AdminOverview = ({ readOnly }) => {
               </h2>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
                     <TrendingUp size={28} />
                   </div>
@@ -934,7 +934,7 @@ const AdminOverview = ({ readOnly }) => {
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
                     <Shield size={28} />
                   </div>
@@ -944,7 +944,7 @@ const AdminOverview = ({ readOnly }) => {
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0ea5e9' }}>
                     <UserPlus size={28} />
                   </div>
@@ -955,8 +955,8 @@ const AdminOverview = ({ readOnly }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+              <div className="bento-grid" style={{ gridTemplateColumns: '1.5fr 1fr 1fr', marginBottom: '2rem' }}>
+                <div className="bento-card">
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Company-Wide Loan Pipeline</h3>
                   <div style={{ width: '100%', height: '300px' }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -982,7 +982,7 @@ const AdminOverview = ({ readOnly }) => {
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div className="bento-card">
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Loan Type Distribution</h3>
                   <div style={{ width: '100%', height: '300px' }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -1025,15 +1025,15 @@ const AdminOverview = ({ readOnly }) => {
 
           {/* ── Loan Recently Added Clients ── */}
           {readOnly && (
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+            <div className="bento-card" style={{ marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Loan Recently Added Clients</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing latest 10 Cheque Handover clients</span>
               </div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <table className="table">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                    <tr >
                       <th style={{ padding: '0.75rem 1rem' }}>Date</th>
                       <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
                       <th style={{ padding: '0.75rem 1rem' }}>Loan Type</th>
@@ -1051,7 +1051,7 @@ const AdminOverview = ({ readOnly }) => {
                         const date = c.createdAt;
                         const salesRep = users.find(u => u.id === c.createdBy)?.name || 'Unassigned';
                         return (
-                          <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                          <tr key={c.id}  >
                             <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '—'}</td>
                             <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{c.fullName || '—'}</td>
                             <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{c.typeOfLoan || '—'}</td>
@@ -1081,7 +1081,7 @@ const AdminOverview = ({ readOnly }) => {
               </h2>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
                     <TrendingUp size={28} />
                   </div>
@@ -1091,7 +1091,7 @@ const AdminOverview = ({ readOnly }) => {
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
                     <Shield size={28} />
                   </div>
@@ -1102,14 +1102,14 @@ const AdminOverview = ({ readOnly }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div className="bento-grid" style={{ gridTemplateColumns: '1.5fr 1fr', marginBottom: '2rem' }}>
                 {/* Campaign Summary Table */}
-                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+                <div className="bento-card">
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Lead Campaign Performance</h3>
                   <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                    <table className="table">
                       <thead>
-                        <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                        <tr >
                           <th style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>Campaign Name</th>
                           <th style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>Status</th>
                           <th style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>Total Leads</th>
@@ -1120,7 +1120,7 @@ const AdminOverview = ({ readOnly }) => {
                       </thead>
                       <tbody>
                         {dmMetrics.listSummary.slice(0, 10).map((list) => (
-                          <tr key={list.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <tr key={list.id} >
                             <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontWeight: '600' }}>{list.name}</td>
                             <td style={{ padding: '0.75rem' }}>
                               <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '0.2rem 0.5rem', borderRadius: '4px', background: list.isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: list.isActive ? '#10b981' : '#ef4444' }}>
@@ -1139,7 +1139,7 @@ const AdminOverview = ({ readOnly }) => {
                 </div>
 
                 {/* Lead Status Breakdown Chart */}
-                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div className="bento-card">
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Lead Status Distribution</h3>
                   <div style={{ width: '100%', height: '450px' }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -1170,7 +1170,7 @@ const AdminOverview = ({ readOnly }) => {
               </h2>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
                     <TrendingUp size={28} />
                   </div>
@@ -1181,7 +1181,7 @@ const AdminOverview = ({ readOnly }) => {
                 </div>
 
 
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <div className="bento-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
                     <TrendingUp size={28} />
                   </div>
@@ -1194,7 +1194,7 @@ const AdminOverview = ({ readOnly }) => {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                 {/* Raw Lead Status Breakdown Chart */}
-                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div className="bento-card">
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 1.5rem 0' }}>Raw Lead Status Distribution</h3>
                   <div style={{ width: '100%', height: '450px' }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -1215,7 +1215,7 @@ const AdminOverview = ({ readOnly }) => {
                 </div>
 
                 {/* Employee-wise Raw Leads Chart */}
-                <div className="card" style={{ padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div className="bento-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
                       {selectedRawLeadEmployee ? 'Employee Raw Leads' : 'Top 5 Employees (Raw Leads)'}
@@ -1265,15 +1265,15 @@ const AdminOverview = ({ readOnly }) => {
 
       {/* ── Last 5 Assigned Clients ── */}
       {!readOnly && (
-        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', marginBottom: '2rem', marginTop: '1.5rem' }}>
+        <div className="bento-card" style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Last 5 Assigned Clients</h3>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500' }}>Showing your latest 5 clients</span>
           </div>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            <table className="table">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                <tr >
                   <th style={{ padding: '0.75rem 1rem', width: '50px' }}>Edit</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Date</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
@@ -1289,7 +1289,7 @@ const AdminOverview = ({ readOnly }) => {
                   const parsed = parseClientFeedback(getClientFeedbackText(c));
                   const dealVal = parsed.totalDealWithGst || Number(c.totalDealAmount) || 0;
                   return (
-                    <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="table-row-hover">
+                    <tr key={c.id}  >
                       <td style={{ padding: '0.75rem 1rem' }}>
                         <button 
                           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }} 
@@ -1539,7 +1539,7 @@ export const ManageUsers = ({ roleFilter, readOnly, canManageUsers, allowedRoles
             const isSelf = u.id === currentUser?.id;
             
             return (
-              <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <tr key={u.id}  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 <td style={{ padding: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: `${ac}1a`, color: ac, border: `1px solid ${ac}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '0.85rem', flexShrink: 0 }}>
@@ -2091,7 +2091,7 @@ const SuperAdminAllClients = ({ readOnly }) => {
       <div className="table-container" style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
         <table className="table" style={{ width: '100%', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+            <tr >
               <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-muted)', fontSize: '0.85rem' }}><input type="checkbox" /></th>
               <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-muted)', fontSize: '0.85rem' }}>ACTIONS</th>
               <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-muted)', fontSize: '0.85rem' }}>STATUS</th>
@@ -2115,7 +2115,7 @@ const SuperAdminAllClients = ({ readOnly }) => {
                  : { color: '#f59e0b', background: 'rgba(245,158,11,0.1)' };
 
                return (
-                  <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', background: 'transparent' }} className="table-row-hover">
+                  <tr key={c.id}  >
                     <td style={{ padding: '1rem' }}><input type="checkbox" /></td>
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
