@@ -398,6 +398,7 @@ const AccountantEditModal = ({ editForm, setEditForm, onSave, onCancel, client, 
             <div style={{ marginBottom: '1.5rem', padding: '1.2rem', background: 'rgba(99,102,241,0.05)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(99,102,241,0.15)' }}>
               <div style={{ fontWeight: '800', fontSize: '1.2rem', color: 'var(--text-primary)', marginBottom: '1rem', borderBottom: '1px solid rgba(99,102,241,0.1)', paddingBottom: '0.5rem' }}>{client.name}</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                <div><strong style={{ color: 'var(--text-primary)' }}>Company Name:</strong> {getClientCompanyName(client) || '—'}</div>
                 <div><strong style={{ color: 'var(--text-primary)' }}>Phone:</strong> {client.phone || '—'}</div>
                 <div><strong style={{ color: 'var(--text-primary)' }}>Email:</strong> {client.email || '—'}</div>
                 <div><strong style={{ color: 'var(--text-primary)' }}>Lead Creator:</strong> {users?.find(u => u.id === client.createdBy)?.name || '—'}</div>
