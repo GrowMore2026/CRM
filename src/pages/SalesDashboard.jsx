@@ -535,7 +535,8 @@ const MyClients = ({ isLeads = false }) => {
     if (editForm.panNumber) parts.push(`[PAN] ${editForm.panNumber.trim()}`);
     if (editForm.gstNumber) parts.push(`[GST] ${editForm.gstNumber.trim()}`);
     (editForm.payments || []).forEach(p => {
-      if (p.amount && p.date) parts.push(`[Payment ₹${p.amount} on ${p.date}]${p.verified ? ' [Verified]' : ''}`);
+      const pDate = p.date || new Date().toISOString().split('T')[0];
+      if (p.amount) parts.push(`[Payment ₹${p.amount} on ${pDate}]${p.verified ? ' [Verified]' : ''}`);
     });
     const svc = (editForm.service || []).filter(Boolean);
     if (svc.length) parts.push(`[Services] ${svc.join('; ')}`);
@@ -1210,18 +1211,20 @@ const MyClients = ({ isLeads = false }) => {
                       <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>Payments {isSales && remaining <= 0 && <span style={{color: '#10b981', marginLeft: '0.5rem'}}>(Fully Paid)</span>}</span>
                         {canAddPayment && (
-                          <button type="button" onClick={() => setEditForm(prev => ({ ...prev, payments: [...(prev.payments || []), { amount: '', date: '' }] }))} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>+ Add</button>
+                          <button type="button" onClick={() => setEditForm(prev => ({ ...prev, payments: [...(prev.payments || []), { amount: '', date: new Date().toISOString().split('T')[0] }] }))} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>+ Add</button>
                         )}
                       </label>
                       
                       <div style={{ marginBottom: '0.8rem' }}>
                         <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'block' }}>Total Deal Amount ₹</label>
-                        <input className="form-control" type="number" disabled={isSales} style={{ fontSize: '0.9rem', padding: '0.4rem 0.6rem', opacity: isSales ? 0.7 : 1, cursor: isSales ? 'not-allowed' : 'text' }} value={editForm.totalDeal} onChange={e => !isSales && setEditForm({ ...editForm, totalDeal: e.target.value })} title={isSales ? "Total amount cannot be changed by sales" : ""} />
+                        <input className="form-control" type="number" disabled={isSales && Number(editForm.totalDeal) > 0} style={{ fontSize: '0.9rem', padding: '0.4rem 0.6rem', opacity: (isSales && Number(editForm.totalDeal) > 0) ? 0.7 : 1, cursor: (isSales && Number(editForm.totalDeal) > 0) ? 'not-allowed' : 'text' }} value={editForm.totalDeal} onChange={e => (!(isSales && Number(editForm.totalDeal) > 0)) && setEditForm({ ...editForm, totalDeal: e.target.value })} title={(isSales && Number(editForm.totalDeal) > 0) ? "Total amount cannot be changed by sales" : ""} />
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         {(editForm.payments || []).map((p, i) => {
-                          const isExisting = editingClient.payments && i < editingClient.payments.length;
+                          const originalClient = myClients.find(c => c.id === editingClient) || {};
+                          const originalPayments = getClientPaymentsList(originalClient);
+                          const isExisting = i < originalPayments.length;
                           const readOnly = isSales && isExisting;
                           return (
                             <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

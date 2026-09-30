@@ -462,7 +462,7 @@ const AccountantEditModal = ({ editForm, setEditForm, onSave, onCancel, client, 
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
               <label style={{ margin: 0, fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Installments / Payments</label>
-              <button type="button" onClick={() => setEditForm(prev => ({ ...prev, payments: [...(prev.payments || []), { amount: '', date: '', verified: false }] }))} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>+ Add Payment</button>
+              <button type="button" onClick={() => setEditForm(prev => ({ ...prev, payments: [...(prev.payments || []), { amount: '', date: new Date().toISOString().split('T')[0], verified: false }] }))} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>+ Add Payment</button>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -588,7 +588,8 @@ const AccountantClients = () => {
     if (editForm.panNumber) parts.push(`[PAN] ${editForm.panNumber.trim()}`);
     if (editForm.gstNumber) parts.push(`[GST] ${editForm.gstNumber.trim()}`);
     (editForm.payments || []).forEach(p => {
-      if (p.amount && p.date) parts.push(`[Payment ₹${p.amount} on ${p.date}]${p.verified ? ' [Verified]' : ''}`);
+      const pDate = p.date || new Date().toISOString().split('T')[0];
+      if (p.amount) parts.push(`[Payment ₹${p.amount} on ${pDate}]${p.verified ? ' [Verified]' : ''}`);
     });
     const svc = (editForm.service || []).filter(Boolean);
     if (svc.length) parts.push(`[Services] ${svc.join('; ')}`);
