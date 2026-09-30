@@ -560,7 +560,6 @@ const MyClients = ({ isLeads = false }) => {
     } else {
       updateClientDetails(clientId, {
         name: editForm.name, email: editForm.email, phone: editForm.phone,
-        city: editForm.city, state: editForm.state,
         interested: editForm.interested, feedback: parts.join('\n\n'),
         service: svc,
         totalDealAmount: totalDeal, paymentAmount: collected,
@@ -1199,7 +1198,7 @@ const MyClients = ({ isLeads = false }) => {
                   </div>
                 </div>
 
-                {(() => {
+                {!isLeads && (() => {
                   const total = Number(editForm.totalDeal) || 0;
                   const collected = (editForm.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
                   const remaining = total - collected;
@@ -1210,7 +1209,7 @@ const MyClients = ({ isLeads = false }) => {
                     <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--border-color)' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>Payments {isSales && remaining <= 0 && <span style={{color: '#10b981', marginLeft: '0.5rem'}}>(Fully Paid)</span>}</span>
-                        {canAddPayment && (
+                        {true && (
                           <button type="button" onClick={() => setEditForm(prev => ({ ...prev, payments: [...(prev.payments || []), { amount: '', date: new Date().toISOString().split('T')[0] }] }))} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>+ Add</button>
                         )}
                       </label>
