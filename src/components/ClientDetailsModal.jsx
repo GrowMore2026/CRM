@@ -142,7 +142,6 @@ const ClientDetailsModal = ({ client, onClose }) => {
       name: editForm.name,
       email: editForm.email,
       phone: editForm.phone,
-      city: editForm.city,
       totalDealAmount: budgetVal,
       feedback: parts.join('\n\n'),
       stage: editForm.stage,
